@@ -33,7 +33,7 @@ Acesse a aplicação em produção: [https://beach-tennis-2852a.web.app](https:/
 
 ## 📊 Conexão com Data Science
 
-Este projeto foi desenhado para servir como uma **fonte de extração de dados (ETL)** para análises analíticas futuras. A estrutura NoSQL do Firestore permite coletar:
+Este projeto foi desenhado para servir como uma **fonte de extração de dados (ETL)** para análises futuras. A estrutura NoSQL do Firestore permite coletar:
 
 1. **Análise de Demanda:** Identificação de horários de pico e cidades com maior engajamento.
 2. **Perfil do Aluno:** Distribuição volumétrica por nível técnico.
