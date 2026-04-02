@@ -8,7 +8,7 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
     --bg: #ffffff; --bg2: #f5f5f3; 
-    --bg3: #0f172a; /* Fundo Geral Azul Escuro */
+    --bg3: #0f172a;
     --text: #1a1a18; --text2: #5a5a56; --text3: #8a8a85;
     --border: rgba(0,0,0,0.12); --border2: rgba(0,0,0,0.22);
     --green: #1D9E75; --green-bg: #E1F5EE; --green-text: #085041;
@@ -74,7 +74,13 @@
 .bar-fill.warn { background: var(--amber); }
 .bar-fill.full { background: var(--red); }
 .names-row { display: flex; flex-wrap: wrap; gap: 4px; min-height: 20px; }
-.chip { font-size: 11px; background: var(--bg2); border-radius: 20px; padding: 2px 9px; color: var(--text2); }
+
+/* Chip com botão de excluir */
+.chip { font-size: 11px; background: var(--bg2); border-radius: 20px; padding: 2px 9px; color: var(--text2); display: inline-flex; align-items: center; gap: 4px; }
+.chip-delete { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 12px; line-height: 1; padding: 0 1px; border-radius: 50%; transition: color .15s, background .15s; display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; }
+.chip-delete:hover { color: var(--red); background: var(--red-bg); }
+.chip.is-mine { background: var(--blue-bg); color: var(--blue-text); }
+
 .full-tag { font-size: 11px; color: var(--red); font-weight: 500; }
 .spots-badge { font-size: 13px; font-weight: 600; min-width: 40px; text-align: right; padding-top: 2px; }
 .spots-badge.ok { color: var(--green); }
@@ -116,6 +122,20 @@ input[type=text]:focus, input[type=password]:focus, input[type=time]:focus, inpu
 .cal-btn { font-size: 12px; font-weight: 600; padding: 8px 12px; border-radius: 6px; text-decoration: none; display: flex; align-items: center; gap: 6px; border: 1px solid var(--border2); background: var(--bg); color: var(--text); transition: background 0.1s; }
 .cal-btn:hover { background: var(--bg2); }
 
+/* Meus Agendamentos */
+.my-bookings-section { margin-top: 20px; }
+.my-bookings-title { font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 6px; }
+.my-booking-item { display: flex; align-items: center; gap: 10px; background: var(--blue-bg); border-radius: var(--radius-sm); padding: 10px 13px; margin-bottom: 7px; border: 1px solid rgba(24,95,165,0.15); }
+.my-booking-info { flex: 1; min-width: 0; }
+.my-booking-name { font-size: 13px; font-weight: 600; color: var(--blue-text); }
+.my-booking-detail { font-size: 11px; color: var(--text2); margin-top: 2px; }
+.my-booking-status { font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 500; white-space: nowrap; }
+.my-booking-status.confirmed { background: var(--green-bg); color: var(--green-text); }
+.my-booking-status.waiting { background: var(--amber-bg); color: var(--amber-text); }
+.btn-cancel-booking { font-size: 12px; padding: 5px 10px; border: 1px solid rgba(192,57,43,0.3); border-radius: 6px; cursor: pointer; background: none; color: var(--red); transition: background .1s, border-color .1s; white-space: nowrap; }
+.btn-cancel-booking:hover { background: var(--red-bg); border-color: var(--red); }
+.no-bookings { text-align: center; padding: 16px 0; color: #a1a1aa; font-size: 13px; }
+
 /* Admin */
 .section-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--text3); margin-bottom: 10px; }
 .day-section { margin-bottom: 20px; }
@@ -125,7 +145,8 @@ input[type=text]:focus, input[type=password]:focus, input[type=time]:focus, inpu
 .admin-row .ar-info { flex: 1; color: var(--text2); font-size: 12px; }
 .btn-sm { font-size: 12px; padding: 5px 10px; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; background: none; color: var(--text2); transition: background .1s; }
 .btn-sm:hover { background: var(--bg2); }
-.btn-sm.danger { color: var(--red); }
+.btn-sm.danger { color: var(--red); border-color: rgba(192,57,43,0.25); }
+.btn-sm.danger:hover { background: var(--red-bg); }
 .add-row { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 10px; }
 .add-row-full { display: flex; flex-direction: column; gap: 7px; margin-top: 7px; }
 .btn-add { padding: 10px 14px; font-size: 13px; font-weight: 600; background: var(--text); color: var(--bg); border: none; border-radius: var(--radius-sm); cursor: pointer; white-space: nowrap; }
@@ -134,9 +155,26 @@ input[type=text]:focus, input[type=password]:focus, input[type=time]:focus, inpu
 .wl-name { flex: 1; font-weight: 600; color: var(--text); }
 .wl-info { font-size: 12px; color: var(--text2); }
 .wl-badge { font-size: 11px; padding: 2px 8px; border-radius: 20px; background: var(--amber-bg); color: var(--amber-text); font-weight: 500; }
+
+/* Admin registrations per slot */
+.admin-reg-list { margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border); }
+.admin-reg-item { display: flex; align-items: center; gap: 8px; padding: 5px 0; font-size: 12px; color: var(--text2); }
+.admin-reg-item .reg-name { flex: 1; font-weight: 500; color: var(--text); }
+.admin-reg-item .reg-email { font-size: 11px; color: var(--text3); }
+
 .loading { text-align: center; padding: 40px 0; color: #a1a1aa; font-size: 14px; }
 .spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: #ffdd15; border-radius: 50%; animation: spin .7s linear infinite; margin-right: 8px; vertical-align: middle; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* Confirm dialog overlay */
+.confirm-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 16px; backdrop-filter: blur(2px); }
+.confirm-box { background: var(--bg); border-radius: var(--radius); box-shadow: 0 8px 32px rgba(0,0,0,0.24); padding: 24px; max-width: 340px; width: 100%; }
+.confirm-box h3 { font-size: 16px; font-weight: 600; margin-bottom: 8px; color: var(--text); }
+.confirm-box p { font-size: 13px; color: var(--text2); line-height: 1.5; margin-bottom: 20px; }
+.confirm-actions { display: flex; gap: 8px; }
+.confirm-actions .btn-confirm-cancel { flex: 1; padding: 10px; font-size: 13px; font-weight: 500; border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; background: none; color: var(--text2); }
+.confirm-actions .btn-confirm-ok { flex: 1; padding: 10px; font-size: 13px; font-weight: 600; border: none; border-radius: var(--radius-sm); cursor: pointer; background: var(--red); color: #fff; }
+.confirm-actions .btn-confirm-ok:hover { opacity: .85; }
 </style>
 </head>
 <body>
@@ -219,6 +257,14 @@ input[type=text]:focus, input[type=password]:focus, input[type=time]:focus, inpu
         <button class="btn" id="reg-btn" onclick="register()">Confirmar Agendamento</button>
         <div class="banner" id="reg-banner"></div>
       </div>
+
+      <!-- Meus Agendamentos -->
+      <div class="card" id="my-bookings-card">
+        <div class="my-bookings-title">
+          📋 Meus Agendamentos
+        </div>
+        <div id="my-bookings-list"></div>
+      </div>
     </div>
   </div>
 
@@ -282,6 +328,18 @@ input[type=text]:focus, input[type=password]:focus, input[type=time]:focus, inpu
 
 </div>
 
+<!-- Custom confirm dialog -->
+<div class="confirm-overlay" id="confirm-overlay" style="display:none;">
+  <div class="confirm-box">
+    <h3 id="confirm-title">Cancelar agendamento</h3>
+    <p id="confirm-msg">Tem certeza que deseja cancelar este agendamento?</p>
+    <div class="confirm-actions">
+      <button class="btn-confirm-cancel" onclick="confirmCancel()">Voltar</button>
+      <button class="btn-confirm-ok" onclick="confirmOk()">Cancelar agendamento</button>
+    </div>
+  </div>
+</div>
+
 <script type="module">
 const firebaseConfig = {
   apiKey: "AIzaSyDQowqvkaIDxAY6zW-pfVA-juLjV_dkwpo",
@@ -328,6 +386,10 @@ let isSignUpMode = false;
 let viewDate = todayKey();
 let editingSlotId = null;
 
+// Confirm dialog state
+let pendingDeleteId = null;
+let pendingDeleteCallback = null;
+
 // ==========================================
 // 🔴 ALTERE PARA O SEU E-MAIL REAL AQUI:
 // ==========================================
@@ -357,8 +419,26 @@ window.updateLocations = function() {
     });
   }
 };
-// Inicializa os locais na primeira vez
 window.updateLocations();
+
+// --- Custom Confirm Dialog ---
+function showConfirm(title, msg, onOk) {
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-msg').textContent = msg;
+  pendingDeleteCallback = onOk;
+  document.getElementById('confirm-overlay').style.display = 'flex';
+}
+
+window.confirmOk = function() {
+  document.getElementById('confirm-overlay').style.display = 'none';
+  if (pendingDeleteCallback) pendingDeleteCallback();
+  pendingDeleteCallback = null;
+};
+
+window.confirmCancel = function() {
+  document.getElementById('confirm-overlay').style.display = 'none';
+  pendingDeleteCallback = null;
+};
 
 
 function startListeners() {
@@ -382,6 +462,7 @@ function startListeners() {
       authCont.style.display = 'none';
       bookCont.style.display = 'block';
       renderPickers();
+      renderMyBookings();
       
       if (user.email === ADMIN_EMAIL) {
         adminTab.style.display = 'block';
@@ -457,7 +538,172 @@ function slotsForDate(dateKey) { return slots.filter(s => s.date === dateKey).so
 function allDatesWithSlots() { return [...new Set(slots.map(s => s.date))].sort(); }
 function spotsLeft(sid) { return MAX_SPOTS - registrations.filter(r => r.assigned === sid).length; }
 function isFull(sid) { return spotsLeft(sid) <= 0; }
-function assignedNames(sid) { return registrations.filter(r => r.assigned === sid).map(r => r.name); }
+function assignedRegs(sid) { return registrations.filter(r => r.assigned === sid); }
+
+// =============================================
+// EXCLUIR AGENDAMENTO — lógica principal
+// =============================================
+
+/**
+ * Cancela um agendamento pelo seu ID de documento Firestore.
+ * Somente o próprio usuário ou o professor podem chamar.
+ * Após exclusão, tenta promover alguém da lista de espera para o mesmo horário.
+ */
+window.cancelBooking = async function(regId) {
+  const reg = [...registrations, ...waitlist].find(r => r.id === regId);
+  if (!reg) return;
+
+  // Segurança: verifica permissão no cliente (Firestore rules devem reforçar no servidor)
+  if (!currentUser) return;
+  const canDelete = isTeacher || reg.uid === currentUser.uid;
+  if (!canDelete) { alert('Sem permissão para cancelar este agendamento.'); return; }
+
+  const slotId = reg.assigned;
+
+  showConfirm(
+    'Cancelar agendamento',
+    `Cancelar a inscrição de "${reg.name}"? Esta ação não pode ser desfeita.`,
+    async () => {
+      try {
+        if (firebaseOk) {
+          await deleteDoc(doc(db, 'registrations', regId));
+          
+          // Após excluir, tenta promover alguém da lista de espera para esta vaga
+          if (slotId) {
+            await promoteFromWaitlist(slotId);
+          }
+        }
+      } catch(e) {
+        alert('Erro ao cancelar agendamento. Tente novamente.');
+        console.error(e);
+      }
+    }
+  );
+};
+
+/**
+ * Tenta promover o primeiro da lista de espera para o horário liberado.
+ */
+async function promoteFromWaitlist(slotId) {
+  if (!firebaseOk) return;
+  // Re-lê waitlist atual para garantir dados frescos
+  const wlForSlot = waitlist.filter(w => {
+    return [w.pref, w.alt1, w.alt2].includes(slotId);
+  });
+  if (!wlForSlot.length) return;
+  
+  const candidate = wlForSlot[0];
+  if (!isFull(slotId)) {
+    await updateDoc(doc(db, 'registrations', candidate.id), { assigned: slotId });
+  }
+}
+
+// =============================================
+// RENDER SCHEDULE — chips com botão de excluir
+// =============================================
+
+function renderSchedule() {
+  renderDayNav();
+  const daySlots = slotsForDate(viewDate);
+  const grid = document.getElementById('slots-grid');
+  if (!daySlots.length) {
+    grid.innerHTML = `<div class="no-slots">Nenhuma aula marcada para este dia.</div>`;
+    return;
+  }
+  grid.innerHTML = daySlots.map(slot => {
+    const left = spotsLeft(slot.id), pct = Math.round((MAX_SPOTS - left) / MAX_SPOTS * 100);
+    const full = left <= 0;
+    const fillClass = pct >= 100 ? 'full' : pct >= 50 ? 'warn' : '';
+    const badgeClass = left <= 0 ? 'full' : left <= 1 ? 'warn' : 'ok';
+    const regs = assignedRegs(slot.id);
+    
+    let locHTML = '';
+    if (slot.location) {
+      const queryStr = encodeURIComponent(`${slot.location}, ${slot.city || ''}`);
+      const locUrl = `https://www.google.com/maps/search/?api=1&query=${queryStr}`;
+      locHTML = `<div style="font-size: 11px; margin-top: 6px; color: var(--text2);">
+        ${slot.location} - ${slot.city || ''}
+        <div style="margin-top:2px;"><a href="${locUrl}" target="_blank" style="color: var(--blue); text-decoration: none;">📍 Ver no mapa</a></div>
+      </div>`;
+    }
+
+    const levelDisplay = slot.level || 'Todos os níveis';
+
+    // Chips com botão de excluir (visível para: professor pode ver todos; usuário vê só os seus)
+    const chipsHTML = regs.map(reg => {
+      const isOwn = currentUser && reg.uid === currentUser.uid;
+      const canDelete = currentUser && (isTeacher || isOwn);
+      const chipClass = isOwn ? 'chip is-mine' : 'chip';
+      const deleteBtn = canDelete
+        ? `<button class="chip-delete" title="Cancelar inscrição" onclick="cancelBooking('${reg.id}')">✕</button>`
+        : '';
+      return `<span class="${chipClass}">${reg.name}${deleteBtn}</span>`;
+    }).join('');
+
+    return `<div class="slot-card${full ? ' full' : ''}">
+      <div class="slot-time">${slot.time}</div>
+      <div class="slot-body">
+        <div class="slot-label">
+          <strong>${slot.label}</strong> 
+          <span style="margin: 0 4px; color: var(--border2);">|</span> 
+          <span style="color: var(--blue); font-weight:500;">${levelDisplay}</span>
+        </div>
+        <div class="bar-bg"><div class="bar-fill ${fillClass}" style="width:${pct}%"></div></div>
+        <div class="names-row">
+          ${chipsHTML}
+          ${full && !regs.length ? '<span class="full-tag">Lotado</span>' : ''}
+        </div>
+        ${locHTML}
+      </div>
+      <div class="spots-badge ${badgeClass}">${left}/${MAX_SPOTS}</div>
+    </div>`;
+  }).join('');
+}
+
+// =============================================
+// MEUS AGENDAMENTOS — aba Inscrever-se
+// =============================================
+
+function renderMyBookings() {
+  const el = document.getElementById('my-bookings-list');
+  if (!el) return;
+  if (!currentUser) { el.innerHTML = ''; return; }
+
+  const myRegs = [...registrations, ...waitlist].filter(r => r.uid === currentUser.uid);
+
+  if (!myRegs.length) {
+    el.innerHTML = `<div class="no-bookings">Você ainda não tem agendamentos.</div>`;
+    return;
+  }
+
+  // Ordena por data
+  const sorted = [...myRegs].sort((a, b) => {
+    const dateA = a.date || '';
+    const dateB = b.date || '';
+    if (dateA !== dateB) return dateA.localeCompare(dateB);
+    const slotA = slots.find(s => s.id === a.assigned);
+    const slotB = slots.find(s => s.id === b.assigned);
+    return (slotA?.time || '').localeCompare(slotB?.time || '');
+  });
+
+  el.innerHTML = sorted.map(reg => {
+    const isWaiting = !registrations.find(r => r.id === reg.id);
+    const slot = slots.find(s => s.id === reg.assigned);
+    const dateLabel = reg.date ? `${formatDateLabel(reg.date)} · ${formatDateSub(reg.date)}` : '';
+    const timeLabel = slot ? slot.time : '—';
+    const locationLabel = slot ? `${slot.location || ''} · ${slot.city || ''}` : '';
+
+    return `<div class="my-booking-item">
+      <div class="my-booking-info">
+        <div class="my-booking-name">${reg.name}</div>
+        <div class="my-booking-detail">${dateLabel}</div>
+        <div class="my-booking-detail">${timeLabel}${locationLabel ? ' · ' + locationLabel : ''}</div>
+      </div>
+      <span class="my-booking-status ${isWaiting ? 'waiting' : 'confirmed'}">${isWaiting ? '⏳ Espera' : '✓ Confirmado'}</span>
+      <button class="btn-cancel-booking" onclick="cancelBooking('${reg.id}')">Cancelar</button>
+    </div>`;
+  }).join('');
+}
 
 function renderDayNav() {
   document.getElementById('nav-date-label').textContent = formatDateLabel(viewDate);
@@ -485,55 +731,6 @@ window.changeDay = function(dir) {
   picks = { pref: null, alt1: null, alt2: null };
   renderAll();
 };
-
-function renderSchedule() {
-  renderDayNav();
-  const daySlots = slotsForDate(viewDate);
-  const grid = document.getElementById('slots-grid');
-  if (!daySlots.length) {
-    grid.innerHTML = `<div class="no-slots">Nenhuma aula marcada para este dia.</div>`;
-    return;
-  }
-  grid.innerHTML = daySlots.map(slot => {
-    const left = spotsLeft(slot.id), pct = Math.round((MAX_SPOTS - left) / MAX_SPOTS * 100);
-    const full = left <= 0;
-    const fillClass = pct >= 100 ? 'full' : pct >= 50 ? 'warn' : '';
-    const badgeClass = left <= 0 ? 'full' : left <= 1 ? 'warn' : 'ok';
-    const names = assignedNames(slot.id);
-    
-    // Processamento do Link de Localização
-    let locHTML = '';
-    if (slot.location) {
-      const queryStr = encodeURIComponent(`${slot.location}, ${slot.city || ''}`);
-      const locUrl = `https://www.google.com/maps/search/?api=1&query=${queryStr}`;
-      locHTML = `<div style="font-size: 11px; margin-top: 6px; color: var(--text2);">
-        ${slot.location} - ${slot.city || ''}
-        <div style="margin-top:2px;"><a href="${locUrl}" target="_blank" style="color: var(--blue); text-decoration: none;">📍 Ver no mapa</a></div>
-      </div>`;
-    }
-
-    // Exibição do Nível
-    const levelDisplay = slot.level || 'Todos os níveis';
-
-    return `<div class="slot-card${full ? ' full' : ''}">
-      <div class="slot-time">${slot.time}</div>
-      <div class="slot-body">
-        <div class="slot-label">
-          <strong>${slot.label}</strong> 
-          <span style="margin: 0 4px; color: var(--border2);">|</span> 
-          <span style="color: var(--blue); font-weight:500;">${levelDisplay}</span>
-        </div>
-        <div class="bar-bg"><div class="bar-fill ${fillClass}" style="width:${pct}%"></div></div>
-        <div class="names-row">
-          ${names.map(n => `<span class="chip">${n}</span>`).join('')}
-          ${full ? '<span class="full-tag">Lotado</span>' : ''}
-        </div>
-        ${locHTML}
-      </div>
-      <div class="spots-badge ${badgeClass}">${left}/${MAX_SPOTS}</div>
-    </div>`;
-  }).join('');
-}
 
 function renderPickers() {
   const daySlots = slotsForDate(viewDate);
@@ -650,6 +847,10 @@ function showBanner(type, html) {
   b.className = 'banner ' + type; b.innerHTML = html; b.style.display = 'block';
 }
 
+// =============================================
+// PAINEL DO PROFESSOR — lista inscritos por slot
+// =============================================
+
 function renderAdminSlots() {
   const el = document.getElementById('admin-slots-list');
   if (!slots.length) { el.innerHTML = '<div style="font-size:13px;color:var(--text2)">Nenhum horário criado.</div>'; return; }
@@ -667,14 +868,30 @@ function renderAdminSlots() {
       ${daySlots.map(slot => {
         const regs = registrations.filter(r => r.assigned === slot.id);
         const levelDisplay = slot.level || 'Todos os níveis';
-        return `<div class="admin-row">
-          <span class="ar-time">${slot.time}</span>
-          <div class="ar-info">
-            <strong>${slot.label}</strong> · ${levelDisplay} · ${regs.length}/${MAX_SPOTS}
-            <div style="color:var(--text3); font-size:11px; margin-top:2px;">${slot.city || ''}</div>
+
+        // Lista de inscritos com botão de exclusão individual
+        const regListHTML = regs.length ? `
+          <div class="admin-reg-list">
+            ${regs.map(reg => `
+              <div class="admin-reg-item">
+                <span class="reg-name">${reg.name}</span>
+                <span class="reg-email">${reg.email || ''}</span>
+                <button class="btn-sm danger" title="Remover inscrição" onclick="cancelBooking('${reg.id}')">✕ Remover</button>
+              </div>
+            `).join('')}
+          </div>` : '';
+
+        return `<div class="admin-row" style="flex-direction:column; align-items:stretch; gap:6px;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span class="ar-time">${slot.time}</span>
+            <div class="ar-info">
+              <strong>${slot.label}</strong> · ${levelDisplay} · ${regs.length}/${MAX_SPOTS}
+              <div style="color:var(--text3); font-size:11px; margin-top:2px;">${slot.city || ''}</div>
+            </div>
+            <button class="btn-sm" onclick="editSlot('${slot.id}')">Editar</button>
+            <button class="btn-sm danger" onclick="removeSlot('${slot.id}')">Remover</button>
           </div>
-          <button class="btn-sm" onclick="editSlot('${slot.id}')">Editar</button>
-          <button class="btn-sm danger" onclick="removeSlot('${slot.id}')">Remover</button>
+          ${regListHTML}
         </div>`;
       }).join('')}
     </div>`;
@@ -691,6 +908,7 @@ function renderWaitlist() {
       <span class="wl-name">${w.name}</span>
       <span class="wl-info">${pDate} · ${pTime}</span>
       <span class="wl-badge">Espera</span>
+      <button class="btn-sm danger" onclick="cancelBooking('${w.id}')">✕</button>
     </div>`;
   }).join('');
 }
@@ -757,13 +975,18 @@ window.adminAddSlot = async function() {
 };
 
 window.removeSlot = async function(id) {
-  if (!confirm('Remover este horário? Os jogadores inscritos perderão a vaga.')) return;
-  if (firebaseOk) {
-    const batch = writeBatch(db);
-    registrations.filter(r => r.assigned === id).forEach(r => batch.delete(doc(db, 'registrations', r.id)));
-    batch.delete(doc(db, 'slots', id));
-    await batch.commit();
-  }
+  showConfirm(
+    'Remover horário',
+    'Remover este horário? Todos os jogadores inscritos perderão a vaga.',
+    async () => {
+      if (firebaseOk) {
+        const batch = writeBatch(db);
+        registrations.filter(r => r.assigned === id).forEach(r => batch.delete(doc(db, 'registrations', r.id)));
+        batch.delete(doc(db, 'slots', id));
+        await batch.commit();
+      }
+    }
+  );
 };
 
 window.autoAssign = async function() {
@@ -783,13 +1006,18 @@ window.autoAssign = async function() {
 };
 
 window.resetAll = async function() {
-  if (!confirm('Apagar TODAS as inscrições e lista de espera?')) return;
-  if (firebaseOk) {
-    const snap = await getDocs(collection(db, 'registrations'));
-    const batch = writeBatch(db);
-    snap.docs.forEach(d => batch.delete(d.ref));
-    await batch.commit();
-  }
+  showConfirm(
+    'Limpar todas as inscrições',
+    'Apagar TODAS as inscrições e lista de espera? Esta ação não pode ser desfeita.',
+    async () => {
+      if (firebaseOk) {
+        const snap = await getDocs(collection(db, 'registrations'));
+        const batch = writeBatch(db);
+        snap.docs.forEach(d => batch.delete(d.ref));
+        await batch.commit();
+      }
+    }
+  );
 };
 
 window.switchTab = function(tab) {
@@ -802,6 +1030,7 @@ window.switchTab = function(tab) {
     picks = { pref: null, alt1: null, alt2: null };
     document.getElementById('reg-banner').className = 'banner';
     renderPickers();
+    renderMyBookings();
   }
 };
 
@@ -810,6 +1039,7 @@ function renderAll() {
   renderPickers();
   renderAdminSlots();
   renderWaitlist();
+  renderMyBookings();
 }
 
 renderAll();
