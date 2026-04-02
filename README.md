@@ -48,3 +48,9 @@ Este projeto foi desenhado para servir como uma **fonte de extração de dados (
 1. Clone o repositório:
    ```bash
    git clone [https://github.com/SEU_USUARIO/beach-tennis-scheduler.git](https://github.com/SEU_USUARIO/beach-tennis-scheduler.git)
+
+## 🤖 Metodologia de Desenvolvimento
+Este projeto foi desenvolvido utilizando técnicas de **AI-Assisted Development**. Através do uso estratégico de IA Generativa, foi possível:
+- Reduzir o tempo de prototipagem de semanas para dias.
+- Implementar boas práticas de segurança e arquitetura NoSQL de forma ágil.
+- Focar na lógica de negócios e na estrutura de dados, delegando a geração de boilerplate à inteligência artificial.
