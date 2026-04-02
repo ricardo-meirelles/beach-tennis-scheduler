@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Agenda - Beach Tennis</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #ffffff; --bg2: #f5f5f3; 
+    --bg3: #0f172a; /* Fundo Geral Azul Escuro */
+    --text: #1a1a18; --text2: #5a5a56; --text3: #8a8a85;
+    --border: rgba(0,0,0,0.12); --border2: rgba(0,0,0,0.22);
+    --green: #1D9E75; --green-bg: #E1F5EE; --green-text: #085041;
+    --amber: #BA7517; --amber-bg: #FAEEDA; --amber-text: #412402;
+    --blue: #185FA5; --blue-bg: #E6F1FB; --blue-text: #042C53;
+    --red: #C0392B; --red-bg: #FCEBEB; --red-text: #501313;
+    --radius: 10px; --radius-sm: 7px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.1);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1a; --bg2: #252523; --bg3: #0f172a;
+      --text: #e8e8e2; --text2: #9a9a94; --text3: #6a6a65;
+      --border: rgba(255,255,255,0.1); --border2: rgba(255,255,255,0.2);
+      --green: #5DCAA5; --green-bg: #04342C; --green-text: #9FE1CB;
+      --amber: #EF9F27; --amber-bg: #412402; --amber-text: #FAC775;
+      --blue: #378ADD; --blue-bg: #042C53; --blue-text: #B5D4F4;
+      --red: #E24B4A; --red-bg: #501313; --red-text: #F7C1C1;
+      --shadow: 0 1px 3px rgba(0,0,0,0.4), 0 0 0 0.5px rgba(255,255,255,0.07);
+    }
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg3); color: var(--text); min-height: 100vh; padding: 16px; }
+  .app { max-width: 600px; margin: 0 auto; }
+
+/* Header */
+.header { text-align: center; padding: 24px 0 16px; }
+.header h1 { font-size: 26px; font-weight: 600; letter-spacing: -0.5px; color: #ffdd15; }
+.header .subtitle { font-size: 14px; color: #ffdd15; margin-top: 6px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+.live-dot { display: inline-block; width: 7px; height: 7px; background: #ffdd15; border-radius: 50%; margin-right: 4px; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+/* Day navigator */
+.day-nav { display: flex; align-items: center; gap: 8px; background: var(--bg); border-radius: var(--radius); box-shadow: var(--shadow); padding: 10px 12px; margin-bottom: 14px; }
+.day-nav-btn { width: 32px; height: 32px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: none; cursor: pointer; font-size: 16px; color: var(--text2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background .1s; }
+.day-nav-btn:hover { background: var(--bg2); }
+.day-nav-btn:disabled { opacity: .3; cursor: default; }
+.day-nav-center { flex: 1; text-align: center; }
+.day-nav-date { font-size: 15px; font-weight: 600; color: var(--text); }
+.day-nav-sub { font-size: 12px; color: var(--text2); margin-top: 1px; }
+.day-dots { display: flex; justify-content: center; gap: 5px; margin-top: 5px; }
+.day-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border2); cursor: pointer; transition: background .15s; }
+.day-dot.has-slots { background: var(--green); }
+.day-dot.active { background: var(--text); }
+
+/* Tab bar */
+.tab-bar { display: flex; background: var(--bg); border-radius: var(--radius); box-shadow: var(--shadow); padding: 4px; margin-bottom: 16px; gap: 4px; }
+.tab { flex: 1; padding: 9px 0; font-size: 13px; font-weight: 500; border: none; background: none; color: var(--text2); border-radius: var(--radius-sm); cursor: pointer; transition: all .15s; }
+.tab.active { background: var(--bg2); color: var(--text); }
+
+/* Cards */
+.card { background: var(--bg); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; margin-bottom: 12px; }
+.view { display: none; }
+.view.active { display: block; }
+
+/* Slot cards */
+.slot-card { background: var(--bg); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 16px; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 14px; }
+.slot-card.full { opacity: .7; }
+.slot-time { font-size: 20px; font-weight: 600; min-width: 64px; letter-spacing: -0.5px; color: var(--text); }
+.slot-body { flex: 1; min-width: 0; }
+.slot-label { font-size: 12px; color: var(--text2); margin-bottom: 6px; }
+.bar-bg { height: 5px; background: var(--bg2); border-radius: 3px; overflow: hidden; margin-bottom: 7px; }
+.bar-fill { height: 100%; border-radius: 3px; transition: width .4s; background: var(--green); }
+.bar-fill.warn { background: var(--amber); }
+.bar-fill.full { background: var(--red); }
+.names-row { display: flex; flex-wrap: wrap; gap: 4px; min-height: 20px; }
+.chip { font-size: 11px; background: var(--bg2); border-radius: 20px; padding: 2px 9px; color: var(--text2); }
+.full-tag { font-size: 11px; color: var(--red); font-weight: 500; }
+.spots-badge { font-size: 13px; font-weight: 600; min-width: 40px; text-align: right; padding-top: 2px; }
+.spots-badge.ok { color: var(--green); }
+.spots-badge.warn { color: var(--amber); }
+.spots-badge.full { color: var(--red); }
+.no-slots { text-align: center; padding: 40px 0; color: #a1a1aa; font-size: 14px; }
+
+/* Form */
+.form-group { margin-bottom: 16px; }
+.form-label { font-size: 13px; color: var(--text2); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+.pill { font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 500; }
+.pill.green { background: var(--green-bg); color: var(--green-text); }
+.pill.amber { background: var(--amber-bg); color: var(--amber-text); }
+.pill.blue { background: var(--blue-bg); color: var(--blue-text); }
+input[type=text], input[type=password], input[type=time], input[type=date], select { width: 100%; padding: 10px 13px; font-size: 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--text); outline: none; transition: border .15s; font-family: inherit; }
+input[type=text]:focus, input[type=password]:focus, input[type=time]:focus, input[type=date]:focus, select:focus { border-color: var(--border2); }
+.slot-picker { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 7px; }
+.slot-opt { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 8px 8px; cursor: pointer; text-align: center; user-select: none; transition: all .12s; background: var(--bg); }
+.slot-opt:not(.disabled):hover { border-color: var(--border2); background: var(--bg2); }
+.slot-opt.s-pref { border-color: var(--green); background: var(--green-bg); }
+.slot-opt.s-alt1 { border-color: var(--amber); background: var(--amber-bg); }
+.slot-opt.s-alt2 { border-color: var(--blue); background: var(--blue-bg); }
+.slot-opt.disabled { opacity: .45; cursor: not-allowed; }
+.slot-opt .ot { font-size: 15px; font-weight: 600; color: var(--text); }
+.slot-opt .ob { font-size: 11px; color: var(--text2); margin-top: 3px; }
+.s-pref .ob { color: var(--green-text); }
+.s-alt1 .ob { color: var(--amber-text); }
+.s-alt2 .ob { color: var(--blue-text); }
+.btn { display: block; width: 100%; padding: 12px; font-size: 15px; font-weight: 600; background: var(--text); color: var(--bg); border: none; border-radius: var(--radius-sm); cursor: pointer; margin-top: 18px; transition: opacity .15s; }
+.btn:hover { opacity: .85; }
+.btn:disabled { opacity: .35; cursor: not-allowed; }
+.banner { border-radius: var(--radius-sm); padding: 14px; font-size: 14px; margin-top: 14px; display: none; line-height: 1.5; }
+.banner.success { background: var(--green-bg); color: var(--green-text); display: block; }
+.banner.warning { background: var(--amber-bg); color: var(--amber-text); display: block; }
+.banner.error { background: var(--red-bg); color: var(--red-text); display: block; }
+
+/* Calendar */
+.cal-links { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.cal-btn { font-size: 12px; font-weight: 600; padding: 8px 12px; border-radius: 6px; text-decoration: none; display: flex; align-items: center; gap: 6px; border: 1px solid var(--border2); background: var(--bg); color: var(--text); transition: background 0.1s; }
+.cal-btn:hover { background: var(--bg2); }
+
+/* Admin */
+.section-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--text3); margin-bottom: 10px; }
+.day-section { margin-bottom: 20px; }
+.day-section-header { font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+.admin-row { display: flex; align-items: center; gap: 10px; background: var(--bg2); border-radius: var(--radius-sm); padding: 10px 13px; margin-bottom: 7px; font-size: 13px; }
+.admin-row .ar-time { font-weight: 600; min-width: 56px; color: var(--text); }
+.admin-row .ar-info { flex: 1; color: var(--text2); font-size: 12px; }
+.btn-sm { font-size: 12px; padding: 5px 10px; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; background: none; color: var(--text2); transition: background .1s; }
+.btn-sm:hover { background: var(--bg2); }
+.btn-sm.danger { color: var(--red); }
+.add-row { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 10px; }
+.add-row-full { display: flex; flex-direction: column; gap: 7px; margin-top: 7px; }
+.btn-add { padding: 10px 14px; font-size: 13px; font-weight: 600; background: var(--text); color: var(--bg); border: none; border-radius: var(--radius-sm); cursor: pointer; white-space: nowrap; }
+.divider { height: 1px; background: var(--border); margin: 20px 0; }
+.wl-item { display: flex; align-items: center; gap: 10px; padding: 9px 13px; background: var(--bg2); border-radius: var(--radius-sm); margin-bottom: 7px; font-size: 13px; }
+.wl-name { flex: 1; font-weight: 600; color: var(--text); }
+.wl-info { font-size: 12px; color: var(--text2); }
+.wl-badge { font-size: 11px; padding: 2px 8px; border-radius: 20px; background: var(--amber-bg); color: var(--amber-text); font-weight: 500; }
+.loading { text-align: center; padding: 40px 0; color: #a1a1aa; font-size: 14px; }
+.spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: #ffdd15; border-radius: 50%; animation: spin .7s linear infinite; margin-right: 8px; vertical-align: middle; }
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <h1>🎾 Beach Tennis</h1>
+    <div class="subtitle">
+      <span><span class="live-dot"></span>Agenda ao vivo</span>
+    </div>
+  </div>
+
+  <div class="day-nav" id="day-nav">
+    <button class="day-nav-btn" id="prev-day" onclick="changeDay(-1)">‹</button>
+    <div class="day-nav-center">
+      <div class="day-nav-date" id="nav-date-label"></div>
+      <div class="day-nav-sub" id="nav-date-sub"></div>
+      <div class="day-dots" id="day-dots"></div>
+    </div>
+    <button class="day-nav-btn" id="next-day" onclick="changeDay(1)">›</button>
+  </div>
+
+  <div class="tab-bar">
+    <button class="tab active" id="tab-schedule" onclick="switchTab('schedule')">Agenda</button>
+    <button class="tab" id="tab-register" onclick="switchTab('register')">Inscrever-se</button>
+    <button class="tab" id="tab-admin" onclick="switchTab('admin')" style="display:none;">Painel do Professor</button>
+  </div>
+
+  <div class="view active" id="view-schedule">
+    <div id="slots-grid"><div class="loading"><span class="spinner"></span>Carregando…</div></div>
+    <div style="text-align:center;font-size:12px;color:#a1a1aa;padding:4px 0 8px;">Por ordem de chegada · 4 vagas por horário</div>
+  </div>
+
+  <div class="view" id="view-register">
+    
+    <div id="auth-container" class="card">
+      <div style="font-size:17px;font-weight:600;margin-bottom:16px;" id="auth-title">Acesse sua conta</div>
+      <div class="form-group">
+        <div class="form-label">E-mail</div>
+        <input type="text" id="auth-email" placeholder="exemplo@email.com" />
+      </div>
+      <div class="form-group">
+        <div class="form-label">Senha</div>
+        <input type="password" id="auth-pass" placeholder="Mínimo 6 caracteres" />
+        <div style="text-align: right; margin-top: 6px;">
+          <a href="#" onclick="resetPassword(); return false;" style="font-size: 12px; color: var(--blue); text-decoration: none;">Esqueceu a senha?</a>
+        </div>
+      </div>
+      <button class="btn" id="btn-login" onclick="handleAuth()">Entrar</button>
+      <button class="btn-sm" style="width:100%; margin-top:10px;" id="btn-switch" onclick="toggleAuthMode()">Não tem conta? Criar agora</button>
+      <div id="auth-error" style="color:var(--red); font-size:12px; margin-top:12px; text-align:center;"></div>
+    </div>
+
+    <div id="booking-container" style="display:none;">
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <div style="font-size:17px;font-weight:600;">Nova Inscrição</div>
+          <button class="btn-sm" onclick="logout()">Sair da conta</button>
+        </div>
+        <div id="reg-day-label" style="font-size:13px; color:var(--text2); margin-bottom:15px;"></div>
+        <div class="form-group">
+          <div class="form-label">Seu nome</div>
+          <input type="text" id="reg-name" placeholder="Como quer ser chamado na lista" />
+        </div>
+        <div class="form-group">
+          <div class="form-label">Preferência <span class="pill green">1ª escolha</span></div>
+          <div class="slot-picker" id="pref-picker"></div>
+        </div>
+        <div class="form-group">
+          <div class="form-label">Alternativa 1 <span class="pill amber">2ª escolha</span></div>
+          <div class="slot-picker" id="alt1-picker"></div>
+        </div>
+        <div class="form-group">
+          <div class="form-label">Alternativa 2 <span class="pill blue">3ª escolha</span></div>
+          <div class="slot-picker" id="alt2-picker"></div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--text3);margin-top:4px;">
+          <span>🟢 1ª</span><span>🟡 2ª</span><span>🔵 3ª</span><span>🔴 Lotado</span>
+        </div>
+        <button class="btn" id="reg-btn" onclick="register()">Confirmar Agendamento</button>
+        <div class="banner" id="reg-banner"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="view" id="view-admin">
+    <div class="card">
+      <div class="section-title" id="admin-form-title">Adicionar novo horário</div>
+      <div class="add-row">
+        <div>
+          <div class="form-label">Data</div>
+          <input type="date" id="new-date" />
+        </div>
+        <div>
+          <div class="form-label">Hora</div>
+          <input type="time" id="new-time" />
+        </div>
+      </div>
+      <div class="add-row-full">
+        <div class="form-label">Período</div>
+        <select id="new-period">
+          <option value="Manhã">Manhã</option>
+          <option value="Tarde">Tarde</option>
+          <option value="Noite">Noite</option>
+        </select>
+
+        <div class="form-label">Nível da Turma</div>
+        <select id="new-level">
+          <option value="Todos os níveis">Todos os níveis</option>
+          <option value="Iniciante/Intermediário">Iniciante/Intermediário</option>
+          <option value="Intermediário/Avançado">Intermediário/Avançado</option>
+        </select>
+        
+        <div class="form-label">Cidade</div>
+        <select id="new-city" onchange="updateLocations()">
+          <option value="Fremont">Fremont</option>
+          <option value="Walnut Creek">Walnut Creek</option>
+          <option value="Larkspur">Larkspur</option>
+        </select>
+        
+        <div class="form-label">Local</div>
+        <select id="new-location"></select>
+      </div>
+      <div style="display:flex; gap:10px; margin-top:12px; justify-content:flex-end;">
+        <button class="btn-sm" id="btn-cancel-edit" style="display:none;" onclick="cancelEdit()">Cancelar</button>
+        <button class="btn-add" id="btn-save-slot" onclick="adminAddSlot()">Adicionar Horário</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title">Todos os horários</div>
+      <div id="admin-slots-list"></div>
+    </div>
+    <div class="card">
+      <div class="section-title">Lista de Espera</div>
+      <div id="waitlist-panel"><div style="font-size:13px;color:var(--text2);">Ninguém na espera.</div></div>
+      <button class="btn-sm" style="margin-top:10px;padding:8px 14px;font-size:13px;" onclick="autoAssign()">⚡ Alocar da espera</button>
+    </div>
+    <div class="card">
+      <div class="section-title">Zona de Perigo</div>
+      <button class="btn-sm danger" onclick="resetAll()">Limpar todas as inscrições</button>
+    </div>
+  </div>
+
+</div>
+
+<script type="module">
+const firebaseConfig = {
+  apiKey: "AIzaSyDQowqvkaIDxAY6zW-pfVA-juLjV_dkwpo",
+  authDomain: "beach-tennis-2852a.firebaseapp.com",
+  projectId: "beach-tennis-2852a",
+  storageBucket: "beach-tennis-2852a.firebasestorage.app",
+  messagingSenderId: "681467305698",
+  appId: "1:681467305698:web:30c7abbe23140d7f6748bb",
+  measurementId: "G-J5SHW0KV84"
+};
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, doc, onSnapshot, addDoc, updateDoc, deleteDoc, getDocs, serverTimestamp, query, orderBy, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+const MAX_SPOTS = 4;
+
+function toDateKey(d) { return d.toISOString().slice(0, 10); }
+function todayKey() { return toDateKey(new Date()); }
+function addDays(dateKey, n) {
+  const d = new Date(dateKey + 'T12:00:00');
+  d.setDate(d.getDate() + n);
+  return toDateKey(d);
+}
+function formatDateLabel(dateKey) {
+  const d = new Date(dateKey + 'T12:00:00');
+  const today = todayKey();
+  const tomorrow = addDays(today, 1);
+  if (dateKey === today) return 'Hoje';
+  if (dateKey === tomorrow) return 'Amanhã';
+  return d.toLocaleDateString('pt-BR', { weekday: 'long' });
+}
+function formatDateSub(dateKey) {
+  const d = new Date(dateKey + 'T12:00:00');
+  return d.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+let db, auth, slots = [], registrations = [], waitlist = [];
+let picks = { pref: null, alt1: null, alt2: null };
+let isTeacher = false;
+let firebaseOk = false;
+let currentUser = null;
+let isSignUpMode = false;
+let viewDate = todayKey();
+let editingSlotId = null;
+
+// ==========================================
+// 🔴 ALTERE PARA O SEU E-MAIL REAL AQUI:
+// ==========================================
+const ADMIN_EMAIL = "yanmeloa1@gmail.com"; 
+
+try {
+  const app = initializeApp(firebaseConfig);
+  db = getFirestore(app);
+  auth = getAuth(app);
+  firebaseOk = true;
+} catch(e) { console.error("Firebase init failed:", e); }
+
+// --- Lógica dos Dropdowns de Local ---
+const mapLocations = {
+  "Fremont": ["Central Park Beach Volleyball Courts"],
+  "Walnut Creek": ["Heather Farm Park", "Larkey Park Swim Center"],
+  "Larkspur": ["Piper park Sand Volleyball courts"]
+};
+
+window.updateLocations = function() {
+  const city = document.getElementById('new-city').value;
+  const locSelect = document.getElementById('new-location');
+  locSelect.innerHTML = '';
+  if(mapLocations[city]) {
+    mapLocations[city].forEach(loc => {
+      locSelect.innerHTML += `<option value="${loc}">${loc}</option>`;
+    });
+  }
+};
+// Inicializa os locais na primeira vez
+window.updateLocations();
+
+
+function startListeners() {
+  onSnapshot(query(collection(db,'slots'), orderBy('date'), orderBy('order')), snap => {
+    slots = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderAll();
+  });
+  onSnapshot(query(collection(db,'registrations'), orderBy('ts')), snap => {
+    registrations = snap.docs.filter(d => d.data().assigned).map(d => ({ id: d.id, ...d.data() }));
+    waitlist = snap.docs.filter(d => !d.data().assigned).map(d => ({ id: d.id, ...d.data() }));
+    renderAll();
+  });
+  
+  onAuthStateChanged(auth, (user) => {
+    currentUser = user;
+    const authCont = document.getElementById('auth-container');
+    const bookCont = document.getElementById('booking-container');
+    const adminTab = document.getElementById('tab-admin');
+    
+    if (user) {
+      authCont.style.display = 'none';
+      bookCont.style.display = 'block';
+      renderPickers();
+      
+      if (user.email === ADMIN_EMAIL) {
+        adminTab.style.display = 'block';
+        isTeacher = true; 
+      } else {
+        adminTab.style.display = 'none';
+        isTeacher = false;
+      }
+    } else {
+      authCont.style.display = 'block';
+      bookCont.style.display = 'none';
+      adminTab.style.display = 'none';
+      isTeacher = false;
+      switchTab('schedule');
+    }
+  });
+}
+
+if (firebaseOk) startListeners();
+
+window.toggleAuthMode = function() {
+  isSignUpMode = !isSignUpMode;
+  document.getElementById('auth-title').textContent = isSignUpMode ? 'Criar nova conta' : 'Acesse sua conta';
+  document.getElementById('btn-login').textContent = isSignUpMode ? 'Cadastrar' : 'Entrar';
+  document.getElementById('btn-switch').textContent = isSignUpMode ? 'Já tenho conta. Entrar' : 'Não tem conta? Criar agora';
+};
+
+window.handleAuth = async function() {
+  const email = document.getElementById('auth-email').value.trim();
+  const pass = document.getElementById('auth-pass').value.trim();
+  const errEl = document.getElementById('auth-error');
+
+  if (!email || pass.length < 6) {
+    errEl.textContent = "E-mail válido e senha de 6 dígitos são necessários.";
+    return;
+  }
+
+  try {
+    if (isSignUpMode) {
+      await createUserWithEmailAndPassword(auth, email, pass);
+    } else {
+      await signInWithEmailAndPassword(auth, email, pass);
+    }
+    errEl.textContent = "";
+  } catch (e) {
+    errEl.textContent = "Erro: " + e.message;
+  }
+};
+
+window.resetPassword = async function() {
+  const email = document.getElementById('auth-email').value.trim();
+  const errEl = document.getElementById('auth-error');
+
+  if (!email) {
+    errEl.style.color = 'var(--amber)';
+    errEl.textContent = "⚠️ Digite seu e-mail no campo acima e clique em 'Esqueceu a senha?'.";
+    return;
+  }
+
+  try {
+    await sendPasswordResetEmail(auth, email);
+    errEl.style.color = 'var(--green)';
+    errEl.textContent = "✓ Link de recuperação enviado! Verifique seu e-mail.";
+  } catch (e) {
+    errEl.style.color = 'var(--red)';
+    errEl.textContent = "Erro ao enviar e-mail. Verifique se o endereço está correto.";
+  }
+};
+
+window.logout = () => signOut(auth);
+
+function slotsForDate(dateKey) { return slots.filter(s => s.date === dateKey).sort((a,b) => a.order - b.order); }
+function allDatesWithSlots() { return [...new Set(slots.map(s => s.date))].sort(); }
+function spotsLeft(sid) { return MAX_SPOTS - registrations.filter(r => r.assigned === sid).length; }
+function isFull(sid) { return spotsLeft(sid) <= 0; }
+function assignedNames(sid) { return registrations.filter(r => r.assigned === sid).map(r => r.name); }
+
+function renderDayNav() {
+  document.getElementById('nav-date-label').textContent = formatDateLabel(viewDate);
+  document.getElementById('nav-date-sub').textContent = formatDateSub(viewDate);
+  const datesWithSlots = allDatesWithSlots();
+  const today = todayKey();
+  
+  document.getElementById('prev-day').disabled = viewDate <= today;
+  document.getElementById('next-day').disabled = false;
+
+  const dotsEl = document.getElementById('day-dots');
+  dotsEl.innerHTML = '';
+  for (let i = 0; i < 7; i++) {
+    const d = addDays(today, i);
+    const dot = document.createElement('div');
+    dot.className = 'day-dot' + (datesWithSlots.includes(d) ? ' has-slots' : '') + (d === viewDate ? ' active' : '');
+    dot.title = formatDateSub(d);
+    dot.onclick = () => { viewDate = d; picks = { pref: null, alt1: null, alt2: null }; renderAll(); };
+    dotsEl.appendChild(dot);
+  }
+}
+
+window.changeDay = function(dir) {
+  viewDate = addDays(viewDate, dir);
+  picks = { pref: null, alt1: null, alt2: null };
+  renderAll();
+};
+
+function renderSchedule() {
+  renderDayNav();
+  const daySlots = slotsForDate(viewDate);
+  const grid = document.getElementById('slots-grid');
+  if (!daySlots.length) {
+    grid.innerHTML = `<div class="no-slots">Nenhuma aula marcada para este dia.</div>`;
+    return;
+  }
+  grid.innerHTML = daySlots.map(slot => {
+    const left = spotsLeft(slot.id), pct = Math.round((MAX_SPOTS - left) / MAX_SPOTS * 100);
+    const full = left <= 0;
+    const fillClass = pct >= 100 ? 'full' : pct >= 50 ? 'warn' : '';
+    const badgeClass = left <= 0 ? 'full' : left <= 1 ? 'warn' : 'ok';
+    const names = assignedNames(slot.id);
+    
+    // Processamento do Link de Localização
+    let locHTML = '';
+    if (slot.location) {
+      const queryStr = encodeURIComponent(`${slot.location}, ${slot.city || ''}`);
+      const locUrl = `https://www.google.com/maps/search/?api=1&query=${queryStr}`;
+      locHTML = `<div style="font-size: 11px; margin-top: 6px; color: var(--text2);">
+        ${slot.location} - ${slot.city || ''}
+        <div style="margin-top:2px;"><a href="${locUrl}" target="_blank" style="color: var(--blue); text-decoration: none;">📍 Ver no mapa</a></div>
+      </div>`;
+    }
+
+    // Exibição do Nível
+    const levelDisplay = slot.level || 'Todos os níveis';
+
+    return `<div class="slot-card${full ? ' full' : ''}">
+      <div class="slot-time">${slot.time}</div>
+      <div class="slot-body">
+        <div class="slot-label">
+          <strong>${slot.label}</strong> 
+          <span style="margin: 0 4px; color: var(--border2);">|</span> 
+          <span style="color: var(--blue); font-weight:500;">${levelDisplay}</span>
+        </div>
+        <div class="bar-bg"><div class="bar-fill ${fillClass}" style="width:${pct}%"></div></div>
+        <div class="names-row">
+          ${names.map(n => `<span class="chip">${n}</span>`).join('')}
+          ${full ? '<span class="full-tag">Lotado</span>' : ''}
+        </div>
+        ${locHTML}
+      </div>
+      <div class="spots-badge ${badgeClass}">${left}/${MAX_SPOTS}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderPickers() {
+  const daySlots = slotsForDate(viewDate);
+  document.getElementById('reg-day-label').textContent = formatDateLabel(viewDate) + ' · ' + formatDateSub(viewDate);
+
+  ['pref', 'alt1', 'alt2'].forEach(key => {
+    const el = document.getElementById(key + '-picker');
+    if (!daySlots.length) {
+      el.innerHTML = '<div style="font-size:13px;color:var(--text2)">Sem horários neste dia.</div>';
+      return;
+    }
+    el.innerHTML = daySlots.map(slot => {
+      const full = isFull(slot.id), left = spotsLeft(slot.id);
+      const sel = picks[key] === slot.id;
+      const cls = sel ? 's-' + key : (full ? 'disabled' : '');
+      const levelDisplay = slot.level || 'Todos os níveis';
+      return `<div class="slot-opt ${cls}" onclick="pickSlot('${key}','${slot.id}')">
+        <div class="ot">${slot.time}</div>
+        <div class="ob" style="margin-bottom:3px; font-weight:500; color:var(--blue);">${levelDisplay}</div>
+        <div class="ob">${full ? 'Lotado' : left + ' vaga' + (left === 1 ? '' : 's')}</div>
+      </div>`;
+    }).join('');
+  });
+}
+
+window.pickSlot = function(key, sid) {
+  if (isFull(sid)) return;
+  if (picks[key] === sid) { picks[key] = null; }
+  else {
+    Object.keys(picks).forEach(k => { if (picks[k] === sid) picks[k] = null; });
+    picks[key] = sid;
+  }
+  renderPickers();
+};
+
+function getCalendarLinks(slot) {
+  const dateStr = slot.date.replace(/-/g, '');
+  const [h, m] = slot.time.split(':');
+  const start = `${dateStr}T${h}${m}00`;
+  const endH = String(parseInt(h) + 1).padStart(2, '0'); 
+  const end = `${dateStr}T${endH}${m}00`;
+  
+  const title = encodeURIComponent("Aula de Beach Tennis");
+  const loc = encodeURIComponent(`${slot.location}, ${slot.city || ''}`);
+  
+  const google = `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&location=${loc}`;
+  const icsData = `BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nDTSTART:${start}\nDTEND:${end}\nSUMMARY:Aula de Beach Tennis\nLOCATION:${slot.location}, ${slot.city || ''}\nEND:VEVENT\nEND:VCALENDAR`;
+  const icsFile = 'data:text/calendar;charset=utf8,' + encodeURIComponent(icsData);
+  
+  return `<div class="cal-links">
+    <a href="${google}" target="_blank" class="cal-btn cal-google">📅 Google Calendar</a>
+    <a href="${icsFile}" download="aula-beach-tennis.ics" class="cal-btn cal-ics">💾 Apple / Outlook</a>
+  </div>`;
+}
+
+window.register = async function() {
+  if (firebaseOk && !currentUser) {
+    alert("Você precisa estar logado!");
+    return;
+  }
+
+  const name = document.getElementById('reg-name').value.trim();
+  const banner = document.getElementById('reg-banner');
+  banner.className = 'banner'; banner.style.display = 'none';
+  if (!name) { showBanner('error', '⚠️ Digite seu nome.'); return; }
+  if (!picks.pref) { showBanner('error', '⚠️ Escolha um horário de preferência.'); return; }
+
+  const btn = document.getElementById('reg-btn');
+  btn.disabled = true;
+  btn.textContent = "Processando...";
+
+  try {
+    const order = ['pref', 'alt1', 'alt2'].map(k => picks[k]).filter(Boolean);
+    let assigned = null;
+    for (const sid of order) { if (!isFull(sid)) { assigned = sid; break; } }
+
+    const reg = {
+      uid: currentUser ? currentUser.uid : 'demo_uid',
+      email: currentUser ? currentUser.email : 'demo@demo.com',
+      name, date: viewDate,
+      pref: picks.pref, alt1: picks.alt1 || null, alt2: picks.alt2 || null,
+      assigned, ts: serverTimestamp()
+    };
+
+    if (firebaseOk) {
+      await addDoc(collection(db, 'registrations'), reg);
+    }
+
+    const slot = slots.find(s => s.id === assigned);
+    if (!assigned) {
+      showBanner('warning', `⚠️ Tudo lotado, <strong>${name}</strong>. Adicionado à lista de espera!`);
+    } else {
+      const gotPref = assigned === picks.pref;
+      let msgHTML = `✓ Confirmado! <strong>${name}</strong> → ${slot.time}${!gotPref ? ' (horário alternativo)' : ''}`;
+      msgHTML += `<div style="margin-top:12px; font-weight:600; font-size:12px; color:var(--text2);">Adicione à sua agenda:</div>`;
+      msgHTML += getCalendarLinks(slot);
+      
+      showBanner('success', msgHTML);
+    }
+    
+    picks = { pref: null, alt1: null, alt2: null };
+    document.getElementById('reg-name').value = '';
+    renderPickers();
+  } catch(e) {
+    showBanner('error', 'Erro ao salvar. Tente novamente.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Confirmar Agendamento";
+  }
+};
+
+function showBanner(type, html) {
+  const b = document.getElementById('reg-banner');
+  b.className = 'banner ' + type; b.innerHTML = html; b.style.display = 'block';
+}
+
+function renderAdminSlots() {
+  const el = document.getElementById('admin-slots-list');
+  if (!slots.length) { el.innerHTML = '<div style="font-size:13px;color:var(--text2)">Nenhum horário criado.</div>'; return; }
+
+  const grouped = {};
+  slots.forEach(slot => {
+    if (!grouped[slot.date]) grouped[slot.date] = [];
+    grouped[slot.date].push(slot);
+  });
+
+  el.innerHTML = Object.keys(grouped).sort().map(date => {
+    const daySlots = grouped[date].sort((a,b) => a.order - b.order);
+    return `<div class="day-section">
+      <div class="day-section-header">${formatDateLabel(date)} — ${formatDateSub(date)}</div>
+      ${daySlots.map(slot => {
+        const regs = registrations.filter(r => r.assigned === slot.id);
+        const levelDisplay = slot.level || 'Todos os níveis';
+        return `<div class="admin-row">
+          <span class="ar-time">${slot.time}</span>
+          <div class="ar-info">
+            <strong>${slot.label}</strong> · ${levelDisplay} · ${regs.length}/${MAX_SPOTS}
+            <div style="color:var(--text3); font-size:11px; margin-top:2px;">${slot.city || ''}</div>
+          </div>
+          <button class="btn-sm" onclick="editSlot('${slot.id}')">Editar</button>
+          <button class="btn-sm danger" onclick="removeSlot('${slot.id}')">Remover</button>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }).join('');
+}
+
+function renderWaitlist() {
+  const el = document.getElementById('waitlist-panel');
+  if (!waitlist.length) { el.innerHTML = '<div style="font-size:13px;color:var(--text2);">Ninguém na espera.</div>'; return; }
+  el.innerHTML = waitlist.map(w => {
+    const pTime = slots.find(s => s.id === w.pref)?.time || '?';
+    const pDate = w.date ? formatDateLabel(w.date) : '';
+    return `<div class="wl-item">
+      <span class="wl-name">${w.name}</span>
+      <span class="wl-info">${pDate} · ${pTime}</span>
+      <span class="wl-badge">Espera</span>
+    </div>`;
+  }).join('');
+}
+
+window.editSlot = function(id) {
+  const slot = slots.find(s => s.id === id);
+  if (!slot) return;
+  
+  editingSlotId = id;
+  document.getElementById('new-date').value = slot.date;
+  document.getElementById('new-time').value = slot.time;
+  
+  document.getElementById('new-period').value = slot.label || 'Manhã';
+  document.getElementById('new-level').value = slot.level || 'Todos os níveis';
+  document.getElementById('new-city').value = slot.city || 'Fremont';
+  updateLocations(); 
+  document.getElementById('new-location').value = slot.location || '';
+  
+  document.getElementById('admin-form-title').textContent = 'Editar horário';
+  document.getElementById('btn-save-slot').textContent = 'Salvar Edição';
+  document.getElementById('btn-cancel-edit').style.display = 'block';
+  
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+window.cancelEdit = function() {
+  editingSlotId = null;
+  document.getElementById('new-time').value = '';
+  document.getElementById('new-period').value = 'Manhã';
+  document.getElementById('new-level').value = 'Todos os níveis';
+  document.getElementById('new-city').value = 'Fremont';
+  updateLocations();
+  
+  document.getElementById('admin-form-title').textContent = 'Adicionar novo horário';
+  document.getElementById('btn-save-slot').textContent = 'Adicionar Horário';
+  document.getElementById('btn-cancel-edit').style.display = 'none';
+};
+
+window.adminAddSlot = async function() {
+  const date = document.getElementById('new-date').value;
+  const time = document.getElementById('new-time').value;
+  const label = document.getElementById('new-period').value;
+  const level = document.getElementById('new-level').value;
+  const city = document.getElementById('new-city').value;
+  const location = document.getElementById('new-location').value;
+  
+  if (!date) { alert('Escolha a data.'); return; }
+  if (!time) { alert('Escolha a hora.'); return; }
+  
+  const order = parseInt(time.replace(':', ''));
+  const slotData = { date, time, label, level, city, location, order };
+  
+  if (editingSlotId) {
+    if (firebaseOk) {
+      await updateDoc(doc(db, 'slots', editingSlotId), slotData);
+    }
+    cancelEdit();
+  } else {
+    if (firebaseOk) {
+      await addDoc(collection(db, 'slots'), slotData);
+    }
+    document.getElementById('new-time').value = '';
+  }
+};
+
+window.removeSlot = async function(id) {
+  if (!confirm('Remover este horário? Os jogadores inscritos perderão a vaga.')) return;
+  if (firebaseOk) {
+    const batch = writeBatch(db);
+    registrations.filter(r => r.assigned === id).forEach(r => batch.delete(doc(db, 'registrations', r.id)));
+    batch.delete(doc(db, 'slots', id));
+    await batch.commit();
+  }
+};
+
+window.autoAssign = async function() {
+  let count = 0;
+  for (const w of [...waitlist]) {
+    const order = ['pref', 'alt1', 'alt2'].map(k => w[k]).filter(Boolean);
+    for (const sid of order) {
+      if (!isFull(sid)) {
+        if (firebaseOk) {
+          await updateDoc(doc(db, 'registrations', w.id), { assigned: sid });
+        }
+        count++; break;
+      }
+    }
+  }
+  alert(count > 0 ? `${count} jogador(es) alocado(s)!` : 'Sem vagas para a lista de espera.');
+};
+
+window.resetAll = async function() {
+  if (!confirm('Apagar TODAS as inscrições e lista de espera?')) return;
+  if (firebaseOk) {
+    const snap = await getDocs(collection(db, 'registrations'));
+    const batch = writeBatch(db);
+    snap.docs.forEach(d => batch.delete(d.ref));
+    await batch.commit();
+  }
+};
+
+window.switchTab = function(tab) {
+  ['schedule', 'register', 'admin'].forEach(t => {
+    document.getElementById('tab-' + t)?.classList.toggle('active', t === tab);
+    document.getElementById('view-' + t)?.classList.toggle('active', t === tab);
+  });
+  document.getElementById('day-nav').style.display = tab === 'admin' ? 'none' : '';
+  if (tab === 'register') {
+    picks = { pref: null, alt1: null, alt2: null };
+    document.getElementById('reg-banner').className = 'banner';
+    renderPickers();
+  }
+};
+
+function renderAll() {
+  renderSchedule();
+  renderPickers();
+  renderAdminSlots();
+  renderWaitlist();
+}
+
+renderAll();
+</script>
+</body>
+</html>
