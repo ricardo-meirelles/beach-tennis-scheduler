@@ -447,8 +447,13 @@ function startListeners() {
     renderAll();
   });
   onSnapshot(query(collection(db,'registrations'), orderBy('ts')), snap => {
-    registrations = snap.docs.filter(d => d.data().assigned).map(d => ({ id: d.id, ...d.data() }));
-    waitlist = snap.docs.filter(d => !d.data().assigned).map(d => ({ id: d.id, ...d.data() }));
+    // FILTRE APENAS OS ATIVOS ANTES DE SEPARAR:
+    const ativos = snap.docs.filter(d => d.data().status !== "cancelado");
+    
+    // USE A VARIÁVEL "ativos" NO LUGAR DE "snap.docs":
+    registrations = ativos.filter(d => d.data().assigned).map(d => ({ id: d.id, ...d.data() }));
+    waitlist = ativos.filter(d => !d.data().assigned).map(d => ({ id: d.id, ...d.data() }));
+    
     renderAll();
   });
   
@@ -566,8 +571,10 @@ window.cancelBooking = async function(regId) {
     async () => {
       try {
         if (firebaseOk) {
-          await deleteDoc(doc(db, 'registrations', regId));
-          
+          await updateDoc(doc(db, 'registrations', regId), { status: "cancelado", canceled_ts: serverTimestamp() 
+
+          });
+
           // Após excluir, tenta promover alguém da lista de espera para esta vaga
           if (slotId) {
             await promoteFromWaitlist(slotId);
@@ -812,7 +819,8 @@ window.register = async function() {
       email: currentUser ? currentUser.email : 'demo@demo.com',
       name, date: viewDate,
       pref: picks.pref, alt1: picks.alt1 || null, alt2: picks.alt2 || null,
-      assigned, ts: serverTimestamp()
+      assigned, ts: serverTimestamp(),
+      status: "ativo"
     };
 
     if (firebaseOk) {
