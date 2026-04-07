@@ -995,7 +995,7 @@ function generateDaySummaryText(dateKey) {
     const regs = registrations.filter(r => r.assigned === slot.id);
     const levelDisplay = slot.level || 'Todos os níveis';
     text += `⏰ *${slot.time}* - ${levelDisplay}\n`;
-    if (slot.location) text += `📍 ${slot.location}\n`;
+    if (slot.location) text += `📍 ${slot.location} - ${slot.city || ''}\n`;
     
     if (regs.length > 0) {
       regs.forEach((reg, i) => {
