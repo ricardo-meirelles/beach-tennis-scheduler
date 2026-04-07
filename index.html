@@ -385,6 +385,8 @@ let currentUser = null;
 let isSignUpMode = false;
 let viewDate = todayKey();
 let editingSlotId = null;
+let adminHistoryExpanded = false;
+let expandedMonths = {};
 
 // Confirm dialog state
 let pendingDeleteId = null;
@@ -627,7 +629,7 @@ function renderSchedule() {
     let locHTML = '';
     if (slot.location) {
       const queryStr = encodeURIComponent(`${slot.location}, ${slot.city || ''}`);
-      const locUrl = `https://www.google.com/maps/search/?api=1&query=${queryStr}`;
+      const locUrl = `https://maps.google.com/?q=${queryStr}`;
       locHTML = `<div style="font-size: 11px; margin-top: 6px; color: var(--text2);">
         ${slot.location} - ${slot.city || ''}
         <div style="margin-top:2px;"><a href="${locUrl}" target="_blank" style="color: var(--blue); text-decoration: none;">📍 Ver no mapa</a></div>
@@ -863,48 +865,160 @@ function renderAdminSlots() {
   const el = document.getElementById('admin-slots-list');
   if (!slots.length) { el.innerHTML = '<div style="font-size:13px;color:var(--text2)">Nenhum horário criado.</div>'; return; }
 
-  const grouped = {};
-  slots.forEach(slot => {
-    if (!grouped[slot.date]) grouped[slot.date] = [];
-    grouped[slot.date].push(slot);
+  const today = todayKey();
+  const futureSlots = slots.filter(s => s.date >= today);
+  const pastSlots = slots.filter(s => s.date < today);
+
+  // Função auxiliar para renderizar a lista de dias (usada para futuro e dentro dos meses do histórico)
+  const renderDayList = (slotsToGroup, isPast = false) => {
+    const grouped = {};
+    slotsToGroup.forEach(slot => {
+      if (!grouped[slot.date]) grouped[slot.date] = [];
+      grouped[slot.date].push(slot);
+    });
+
+    const sortedDates = Object.keys(grouped).sort((a, b) => isPast ? b.localeCompare(a) : a.localeCompare(b));
+
+    return sortedDates.map(date => {
+      const daySlots = grouped[date].sort((a,b) => a.order - b.order);
+      return `<div class="day-section">
+        <div class="day-section-header" style="display:flex; justify-content:space-between; align-items:center;">
+          <span>${formatDateLabel(date)} — ${formatDateSub(date)}</span>
+          ${!isPast ? `
+            <div style="display:flex; gap:5px;">
+              <button class="btn-sm" onclick="copyDaySummary('${date}')" title="Copiar resumo para WhatsApp">📋 WhatsApp</button>
+            </div>
+          ` : ''}
+        </div>
+        ${daySlots.map(slot => {
+          const regs = registrations.filter(r => r.assigned === slot.id);
+          const levelDisplay = slot.level || 'Todos os níveis';
+          const regListHTML = regs.length ? `
+            <div class="admin-reg-list">
+              ${regs.map(reg => `
+                <div class="admin-reg-item">
+                  <span class="reg-name">${reg.name}</span>
+                  <span class="reg-email">${reg.email || ''}</span>
+                  <button class="btn-sm danger" title="Remover inscrição" onclick="cancelBooking('${reg.id}')">✕ Remover</button>
+                </div>
+              `).join('')}
+            </div>` : '';
+
+          return `<div class="admin-row" style="flex-direction:column; align-items:stretch; gap:6px; ${isPast ? 'opacity: 0.7;' : ''}">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span class="ar-time">${slot.time}</span>
+              <div class="ar-info">
+                <strong>${slot.label}</strong> · ${levelDisplay} · ${regs.length}/${MAX_SPOTS}
+                <div style="color:var(--text3); font-size:11px; margin-top:2px;">${slot.city || ''}</div>
+              </div>
+              <button class="btn-sm" onclick="editSlot('${slot.id}')">Editar</button>
+              <button class="btn-sm danger" onclick="removeSlot('${slot.id}')">Remover</button>
+            </div>
+            ${regListHTML}
+          </div>`;
+        }).join('')}
+      </div>`;
+    }).join('');
+  };
+
+  // Renderiza Próximos Horários
+  let html = `
+    <div style="margin-top: 15px; margin-bottom: 25px;">
+      <div style="font-size: 12px; font-weight: 700; margin-bottom: 12px; color: var(--text2); display: flex; align-items: center; gap: 8px;">
+        📅 PRÓXIMOS HORÁRIOS
+      </div>
+      ${renderDayList(futureSlots, false)}
+    </div>
+  `;
+
+  // Renderiza Histórico com agrupamento por mês e expansão
+  if (pastSlots.length > 0) {
+    const historyByMonth = {};
+    pastSlots.forEach(s => {
+      const monthKey = s.date.substring(0, 7); // YYYY-MM
+      if (!historyByMonth[monthKey]) historyByMonth[monthKey] = [];
+      historyByMonth[monthKey].push(s);
+    });
+    const sortedMonths = Object.keys(historyByMonth).sort((a, b) => b.localeCompare(a));
+
+    html += `
+      <div style="margin-top: 25px;">
+        <button class="btn-sm" style="width:100%; display:flex; justify-content:space-between; align-items:center; padding: 12px; background: var(--bg2); color: var(--text2); font-weight:700;" onclick="toggleAdminHistory()">
+          <span>⏳ HISTÓRICO DE HORÁRIOS</span>
+          <span>${adminHistoryExpanded ? '▲' : '▼'}</span>
+        </button>
+        <div id="admin-history-content" style="display: ${adminHistoryExpanded ? 'block' : 'none'}; margin-top: 15px;">
+          ${sortedMonths.map(monthKey => {
+            const monthSlots = historyByMonth[monthKey];
+            const isMonthExpanded = expandedMonths[monthKey];
+            const monthLabel = new Date(monthKey + '-01T12:00:00').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+            
+            return `
+              <div style="margin-bottom: 15px; border-left: 2px solid var(--border); padding-left: 12px;">
+                <div style="cursor:pointer; font-size:14px; font-weight:600; color:var(--text2); margin-bottom:10px; display:flex; align-items:center; gap:8px;" onclick="toggleMonth('${monthKey}')">
+                  <span>${isMonthExpanded ? '📂' : '📁'}</span>
+                  <span style="text-transform: capitalize;">${monthLabel}</span>
+                  <span style="font-size:11px; font-weight:normal; opacity:0.7;">(${monthSlots.length} horários)</span>
+                </div>
+                ${isMonthExpanded ? renderDayList(monthSlots, true) : ''}
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  el.innerHTML = html;
+}
+
+window.toggleAdminHistory = function() {
+  adminHistoryExpanded = !adminHistoryExpanded;
+  renderAdminSlots();
+};
+
+window.toggleMonth = function(monthKey) {
+  expandedMonths[monthKey] = !expandedMonths[monthKey];
+  renderAdminSlots();
+};
+
+/**
+ * Gera o texto formatado para o resumo do dia
+ */
+function generateDaySummaryText(dateKey) {
+  const daySlots = slots.filter(s => s.date === dateKey).sort((a,b) => a.order - b.order);
+  if (!daySlots.length) return "";
+
+  let text = `🎾 *AGENDA - ${formatDateLabel(dateKey).toUpperCase()} (${formatDateSub(dateKey)})*\n\n`;
+
+  daySlots.forEach(slot => {
+    const regs = registrations.filter(r => r.assigned === slot.id);
+    const levelDisplay = slot.level || 'Todos os níveis';
+    text += `⏰ *${slot.time}* - ${levelDisplay}\n`;
+    if (slot.location) text += `📍 ${slot.location}\n`;
+    
+    if (regs.length > 0) {
+      regs.forEach((reg, i) => {
+        text += `${i + 1}. ${reg.name}\n`;
+      });
+    } else {
+      text += `(Nenhum inscrito ainda)\n`;
+    }
+    text += `\n`;
   });
 
-  el.innerHTML = Object.keys(grouped).sort().map(date => {
-    const daySlots = grouped[date].sort((a,b) => a.order - b.order);
-    return `<div class="day-section">
-      <div class="day-section-header">${formatDateLabel(date)} — ${formatDateSub(date)}</div>
-      ${daySlots.map(slot => {
-        const regs = registrations.filter(r => r.assigned === slot.id);
-        const levelDisplay = slot.level || 'Todos os níveis';
-
-        // Lista de inscritos com botão de exclusão individual
-        const regListHTML = regs.length ? `
-          <div class="admin-reg-list">
-            ${regs.map(reg => `
-              <div class="admin-reg-item">
-                <span class="reg-name">${reg.name}</span>
-                <span class="reg-email">${reg.email || ''}</span>
-                <button class="btn-sm danger" title="Remover inscrição" onclick="cancelBooking('${reg.id}')">✕ Remover</button>
-              </div>
-            `).join('')}
-          </div>` : '';
-
-        return `<div class="admin-row" style="flex-direction:column; align-items:stretch; gap:6px;">
-          <div style="display:flex; align-items:center; gap:10px;">
-            <span class="ar-time">${slot.time}</span>
-            <div class="ar-info">
-              <strong>${slot.label}</strong> · ${levelDisplay} · ${regs.length}/${MAX_SPOTS}
-              <div style="color:var(--text3); font-size:11px; margin-top:2px;">${slot.city || ''}</div>
-            </div>
-            <button class="btn-sm" onclick="editSlot('${slot.id}')">Editar</button>
-            <button class="btn-sm danger" onclick="removeSlot('${slot.id}')">Remover</button>
-          </div>
-          ${regListHTML}
-        </div>`;
-      }).join('')}
-    </div>`;
-  }).join('');
+  text += `Boa aula a todos! 🎾🔥`;
+  return text;
 }
+
+window.copyDaySummary = function(dateKey) {
+  const text = generateDaySummaryText(dateKey);
+  navigator.clipboard.writeText(text).then(() => {
+    alert('✅ Resumo copiado! Agora é só colar no WhatsApp.');
+  }).catch(err => {
+    alert('Erro ao copiar texto. Tente selecionar e copiar manualmente.');
+  });
+};
 
 function renderWaitlist() {
   const el = document.getElementById('waitlist-panel');
