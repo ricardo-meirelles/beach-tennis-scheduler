@@ -1,5 +1,9 @@
 {
   "projects": {
-    "default": "beach-tennis-2852a"
-  }
+    "default": "beach-tennis-2852a",
+    "production": "beach-tennis-2852a",
+    "staging": "beach-tennis-staging"
+  },
+  "targets": {},
+  "etags": {}
 }

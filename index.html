@@ -175,6 +175,10 @@ input[type=text]:focus, input[type=password]:focus, input[type=time]:focus, inpu
 .confirm-actions .btn-confirm-cancel { flex: 1; padding: 10px; font-size: 13px; font-weight: 500; border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; background: none; color: var(--text2); }
 .confirm-actions .btn-confirm-ok { flex: 1; padding: 10px; font-size: 13px; font-weight: 600; border: none; border-radius: var(--radius-sm); cursor: pointer; background: var(--red); color: #fff; }
 .confirm-actions .btn-confirm-ok:hover { opacity: .85; }
+
+/* Language toggle */
+.lang-toggle { font-size: 13px; padding: 5px 10px; border-radius: 6px; border: 1px solid rgba(255,221,21,0.4); background: rgba(255,221,21,0.1); color: #ffdd15; cursor: pointer; }
+.lang-toggle:hover { background: rgba(255,221,21,0.2); }
 </style>
 </head>
 <body>
@@ -183,7 +187,8 @@ input[type=text]:focus, input[type=password]:focus, input[type=time]:focus, inpu
   <div class="header">
     <h1>🎾 GOLDEN STATE BEACH TENNIS</h1>
     <div class="subtitle">
-      <span><span class="live-dot"></span>Professor Yan Abdalla</span>
+      <span><span class="live-dot"></span><span data-i18n="subtitle">Professor Yan Abdalla</span></span>
+      <button class="lang-toggle" id="lang-btn" onclick="toggleLang()">🇺🇸 EN</button>
     </div>
   </div>
 
@@ -198,14 +203,14 @@ input[type=text]:focus, input[type=password]:focus, input[type=time]:focus, inpu
   </div>
 
   <div class="tab-bar">
-    <button class="tab active" id="tab-schedule" onclick="switchTab('schedule')">Agenda</button>
-    <button class="tab" id="tab-register" onclick="switchTab('register')">Inscrever-se</button>
-    <button class="tab" id="tab-admin" onclick="switchTab('admin')" style="display:none;">Painel do Professor</button>
+    <button class="tab active" id="tab-schedule" onclick="switchTab('schedule')" data-i18n="tab_schedule">Agenda</button>
+    <button class="tab" id="tab-register" onclick="switchTab('register')" data-i18n="tab_register">Inscrever-se</button>
+    <button class="tab" id="tab-admin" onclick="switchTab('admin')" style="display:none;" data-i18n="tab_admin">Painel do Professor</button>
   </div>
 
   <div class="view active" id="view-schedule">
-    <div id="slots-grid"><div class="loading"><span class="spinner"></span>Carregando…</div></div>
-    <div style="text-align:center;font-size:12px;color:#a1a1aa;padding:4px 0 8px;">Por ordem de chegada · 4 vagas por horário</div>
+    <div id="slots-grid"><div class="loading"><span class="spinner"></span><span data-i18n="loading">Carregando…</span></div></div>
+    <div style="text-align:center;font-size:12px;color:#a1a1aa;padding:4px 0 8px;" data-i18n="first_come">Por ordem de chegada · 4 vagas por horário</div>
   </div>
 
   <div class="view" id="view-register">
@@ -213,14 +218,14 @@ input[type=text]:focus, input[type=password]:focus, input[type=time]:focus, inpu
     <div id="auth-container" class="card">
       <div style="font-size:17px;font-weight:600;margin-bottom:16px;" id="auth-title">Acesse sua conta</div>
       <div class="form-group">
-        <div class="form-label">E-mail</div>
+        <div class="form-label" data-i18n="email_label">E-mail</div>
         <input type="text" id="auth-email" placeholder="exemplo@email.com" />
       </div>
       <div class="form-group">
-        <div class="form-label">Senha</div>
+        <div class="form-label" data-i18n="password_label">Senha</div>
         <input type="password" id="auth-pass" placeholder="Mínimo 6 caracteres" />
         <div style="text-align: right; margin-top: 6px;">
-          <a href="#" onclick="resetPassword(); return false;" style="font-size: 12px; color: var(--blue); text-decoration: none;">Esqueceu a senha?</a>
+          <a href="#" onclick="resetPassword(); return false;" style="font-size: 12px; color: var(--blue); text-decoration: none;" data-i18n="forgot_password">Esqueceu a senha?</a>
         </div>
       </div>
       <button class="btn" id="btn-login" onclick="handleAuth()">Entrar</button>
@@ -231,36 +236,36 @@ input[type=text]:focus, input[type=password]:focus, input[type=time]:focus, inpu
     <div id="booking-container" style="display:none;">
       <div class="card">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-          <div style="font-size:17px;font-weight:600;">Nova Inscrição</div>
-          <button class="btn-sm" onclick="logout()">Sair da conta</button>
+          <div style="font-size:17px;font-weight:600;" data-i18n="new_booking">Nova Inscrição</div>
+          <button class="btn-sm" onclick="logout()" data-i18n="logout">Sair da conta</button>
         </div>
         <div id="reg-day-label" style="font-size:13px; color:var(--text2); margin-bottom:15px;"></div>
         <div class="form-group">
-          <div class="form-label">Seu nome</div>
+          <div class="form-label" data-i18n="name_label">Seu nome</div>
           <input type="text" id="reg-name" placeholder="Como quer ser chamado na lista" />
         </div>
         <div class="form-group">
-          <div class="form-label">Preferência <span class="pill green">1ª escolha</span></div>
+          <div class="form-label"><span data-i18n="pref_label">Preferência</span> <span class="pill green" data-i18n="pref_pill">1ª escolha</span></div>
           <div class="slot-picker" id="pref-picker"></div>
         </div>
         <div class="form-group">
-          <div class="form-label">Alternativa 1 <span class="pill amber">2ª escolha</span></div>
+          <div class="form-label"><span data-i18n="alt1_label">Alternativa 1</span> <span class="pill amber" data-i18n="alt1_pill">2ª escolha</span></div>
           <div class="slot-picker" id="alt1-picker"></div>
         </div>
         <div class="form-group">
-          <div class="form-label">Alternativa 2 <span class="pill blue">3ª escolha</span></div>
+          <div class="form-label"><span data-i18n="alt2_label">Alternativa 2</span> <span class="pill blue" data-i18n="alt2_pill">3ª escolha</span></div>
           <div class="slot-picker" id="alt2-picker"></div>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--text3);margin-top:4px;">
-          <span>🟢 1ª</span><span>🟡 2ª</span><span>🔵 3ª</span><span>🔴 Lotado</span>
+          <span data-i18n="legend_1">🟢 1ª</span><span data-i18n="legend_2">🟡 2ª</span><span data-i18n="legend_3">🔵 3ª</span><span data-i18n="legend_full">🔴 Lotado</span>
         </div>
-        <button class="btn" id="reg-btn" onclick="register()">Confirmar Agendamento</button>
+        <button class="btn" id="reg-btn" onclick="register()" data-i18n="btn_confirm">Confirmar Agendamento</button>
         <div class="banner" id="reg-banner"></div>
       </div>
 
       <!-- Meus Agendamentos -->
       <div class="card" id="my-bookings-card">
-        <div class="my-bookings-title">
+        <div class="my-bookings-title" data-i18n="my_bookings">
           📋 Meus Agendamentos
         </div>
         <div id="my-bookings-list"></div>
@@ -273,56 +278,56 @@ input[type=text]:focus, input[type=password]:focus, input[type=time]:focus, inpu
       <div class="section-title" id="admin-form-title">Adicionar novo horário</div>
       <div class="add-row">
         <div>
-          <div class="form-label">Data</div>
+          <div class="form-label" data-i18n="date_label">Data</div>
           <input type="date" id="new-date" />
         </div>
         <div>
-          <div class="form-label">Hora</div>
+          <div class="form-label" data-i18n="time_label">Hora</div>
           <input type="time" id="new-time" />
         </div>
       </div>
       <div class="add-row-full">
-        <div class="form-label">Período</div>
+        <div class="form-label" data-i18n="period_label">Período</div>
         <select id="new-period">
-          <option value="Manhã">Manhã</option>
-          <option value="Tarde">Tarde</option>
-          <option value="Noite">Noite</option>
+          <option value="Manhã" data-i18n="period_morning">Manhã</option>
+          <option value="Tarde" data-i18n="period_afternoon">Tarde</option>
+          <option value="Noite" data-i18n="period_evening">Noite</option>
         </select>
 
-        <div class="form-label">Nível da Turma</div>
+        <div class="form-label" data-i18n="level_label">Nível da Turma</div>
         <select id="new-level">
-          <option value="Todos os níveis">Todos os níveis</option>
-          <option value="Iniciante/Intermediário">Iniciante/Intermediário</option>
-          <option value="Intermediário/Avançado">Intermediário/Avançado</option>
+          <option value="Todos os níveis" data-i18n="level_all">Todos os níveis</option>
+          <option value="Iniciante/Intermediário" data-i18n="level_beg_int">Iniciante/Intermediário</option>
+          <option value="Intermediário/Avançado" data-i18n="level_int_adv">Intermediário/Avançado</option>
         </select>
-        
-        <div class="form-label">Cidade</div>
+
+        <div class="form-label" data-i18n="city_label">Cidade</div>
         <select id="new-city" onchange="updateLocations()">
           <option value="Fremont">Fremont</option>
           <option value="Walnut Creek">Walnut Creek</option>
           <option value="Larkspur">Larkspur</option>
         </select>
-        
-        <div class="form-label">Local</div>
+
+        <div class="form-label" data-i18n="location_label">Local</div>
         <select id="new-location"></select>
       </div>
       <div style="display:flex; gap:10px; margin-top:12px; justify-content:flex-end;">
-        <button class="btn-sm" id="btn-cancel-edit" style="display:none;" onclick="cancelEdit()">Cancelar</button>
-        <button class="btn-add" id="btn-save-slot" onclick="adminAddSlot()">Adicionar Horário</button>
+        <button class="btn-sm" id="btn-cancel-edit" style="display:none;" onclick="cancelEdit()" data-i18n="btn_cancel_edit">Cancelar</button>
+        <button class="btn-add" id="btn-save-slot" onclick="adminAddSlot()" data-i18n="btn_save_slot">Adicionar Horário</button>
       </div>
     </div>
     <div class="card">
-      <div class="section-title">Todos os horários</div>
+      <div class="section-title" data-i18n="section_all_slots">Todos os horários</div>
       <div id="admin-slots-list"></div>
     </div>
     <div class="card">
-      <div class="section-title">Lista de Espera</div>
-      <div id="waitlist-panel"><div style="font-size:13px;color:var(--text2);">Ninguém na espera.</div></div>
-      <button class="btn-sm" style="margin-top:10px;padding:8px 14px;font-size:13px;" onclick="autoAssign()">⚡ Alocar da espera</button>
+      <div class="section-title" data-i18n="section_waitlist">Lista de Espera</div>
+      <div id="waitlist-panel"></div>
+      <button class="btn-sm" style="margin-top:10px;padding:8px 14px;font-size:13px;" onclick="autoAssign()" data-i18n="btn_auto_assign">⚡ Alocar da espera</button>
     </div>
     <div class="card">
-      <div class="section-title">Zona de Perigo</div>
-      <button class="btn-sm danger" onclick="resetAll()">Limpar todas as inscrições</button>
+      <div class="section-title" data-i18n="section_danger">Zona de Perigo</div>
+      <button class="btn-sm danger" onclick="resetAll()" data-i18n="btn_reset">Limpar todas as inscrições</button>
     </div>
   </div>
 
@@ -334,14 +339,23 @@ input[type=text]:focus, input[type=password]:focus, input[type=time]:focus, inpu
     <h3 id="confirm-title">Cancelar agendamento</h3>
     <p id="confirm-msg">Tem certeza que deseja cancelar este agendamento?</p>
     <div class="confirm-actions">
-      <button class="btn-confirm-cancel" onclick="confirmCancel()">Voltar</button>
-      <button class="btn-confirm-ok" onclick="confirmOk()">Cancelar agendamento</button>
+      <button class="btn-confirm-cancel" id="confirm-back-btn" onclick="confirmCancel()" data-i18n="confirm_back">Voltar</button>
+      <button class="btn-confirm-ok" id="confirm-ok-btn" onclick="confirmOk()" data-i18n="confirm_ok_btn">Cancelar agendamento</button>
     </div>
   </div>
 </div>
 
 <script type="module">
-const firebaseConfig = {
+const STAGING_CONFIG = {
+  apiKey: "AIzaSyCBibHCEpxfXk7MCuaFrwfo8h3yxlOwI4Q",
+  authDomain: "beach-tennis-staging.firebaseapp.com",
+  projectId: "beach-tennis-staging",
+  storageBucket: "beach-tennis-staging.firebasestorage.app",
+  messagingSenderId: "4476649244",
+  appId: "1:4476649244:web:3dde790d7493facac144d9"
+};
+
+const PROD_CONFIG = {
   apiKey: "AIzaSyDQowqvkaIDxAY6zW-pfVA-juLjV_dkwpo",
   authDomain: "beach-tennis-2852a.firebaseapp.com",
   projectId: "beach-tennis-2852a",
@@ -351,14 +365,201 @@ const firebaseConfig = {
   measurementId: "G-J5SHW0KV84"
 };
 
+const isStaging = window.location.hostname.includes('staging') || window.location.hostname === 'localhost';
+const firebaseConfig = isStaging ? STAGING_CONFIG : PROD_CONFIG;
+console.log("Ambiente atual:", isStaging ? "🛠️ STAGING" : "🚀 PRODUÇÃO");
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, doc, onSnapshot, addDoc, updateDoc, deleteDoc, getDocs, serverTimestamp, query, orderBy, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const MAX_SPOTS = 4;
 
+// =============================================
+// SISTEMA DE INTERNACIONALIZAÇÃO (i18n)
+// =============================================
+const browserLang = navigator.language?.startsWith('pt') ? 'pt' : 'en';
+let lang = localStorage.getItem('lang') || browserLang;
+
+const LANG = {
+  pt: {
+    page_title: 'Agenda - Beach Tennis',
+    subtitle: 'Professor Yan Abdalla',
+    tab_schedule: 'Agenda', tab_register: 'Inscrever-se', tab_admin: 'Painel do Professor',
+    loading: 'Carregando…', first_come: 'Por ordem de chegada · 4 vagas por horário',
+    today: 'Hoje', tomorrow: 'Amanhã',
+    no_slots: 'Nenhuma aula marcada para este dia.',
+    map_link: '📍 Ver no mapa', full: 'Lotado', spot: 'vaga', spots: 'vagas',
+    auth_title_login: 'Acesse sua conta', auth_title_signup: 'Criar nova conta',
+    email_label: 'E-mail', password_label: 'Senha',
+    forgot_password: 'Esqueceu a senha?',
+    btn_login: 'Entrar', btn_signup: 'Cadastrar',
+    btn_create_account: 'Não tem conta? Criar agora', btn_have_account: 'Já tenho conta. Entrar',
+    auth_error_fields: 'E-mail válido e senha de 6 dígitos são necessários.',
+    auth_error_prefix: 'Erro: ',
+    reset_no_email: "⚠️ Digite seu e-mail no campo acima e clique em 'Esqueceu a senha?'.",
+    reset_sent: '✓ Link de recuperação enviado! Verifique seu e-mail.',
+    reset_error: 'Erro ao enviar e-mail. Verifique se o endereço está correto.',
+    new_booking: 'Nova Inscrição', logout: 'Sair da conta',
+    name_label: 'Seu nome',
+    pref_label: 'Preferência', pref_pill: '1ª escolha',
+    alt1_label: 'Alternativa 1', alt1_pill: '2ª escolha',
+    alt2_label: 'Alternativa 2', alt2_pill: '3ª escolha',
+    legend_1: '🟢 1ª', legend_2: '🟡 2ª', legend_3: '🔵 3ª', legend_full: '🔴 Lotado',
+    btn_confirm: 'Confirmar Agendamento', btn_processing: 'Processando...',
+    my_bookings: '📋 Meus Agendamentos', no_bookings: 'Você ainda não tem agendamentos.',
+    status_confirmed: '✓ Confirmado', status_waiting: '⏳ Espera', btn_cancel_booking: 'Cancelar',
+    no_slots_picker: 'Sem horários neste dia.',
+    must_login: 'Você precisa estar logado!',
+    err_name: '⚠️ Digite seu nome.', err_pref: '⚠️ Escolha um horário de preferência.',
+    no_permission: 'Sem permissão para cancelar este agendamento.',
+    err_cancel: 'Erro ao cancelar agendamento. Tente novamente.',
+    err_save: 'Erro ao salvar. Tente novamente.',
+    cal_label: 'Adicione à sua agenda:', cal_google: '📅 Google Calendar', cal_ios: '💾 Apple / Outlook',
+    cal_event_title: 'Aula de Beach Tennis',
+    admin_form_title_add: 'Adicionar novo horário', admin_form_title_edit: 'Editar horário',
+    date_label: 'Data', time_label: 'Hora', period_label: 'Período',
+    period_morning: 'Manhã', period_afternoon: 'Tarde', period_evening: 'Noite',
+    level_label: 'Nível da Turma', level_all: 'Todos os níveis',
+    level_beg_int: 'Iniciante/Intermediário', level_int_adv: 'Intermediário/Avançado',
+    city_label: 'Cidade', location_label: 'Local',
+    btn_cancel_edit: 'Cancelar', btn_save_slot: 'Adicionar Horário', btn_save_edit: 'Salvar Edição',
+    section_all_slots: 'Todos os horários', section_waitlist: 'Lista de Espera',
+    no_waitlist: 'Ninguém na espera.',
+    btn_auto_assign: '⚡ Alocar da espera', section_danger: 'Zona de Perigo',
+    btn_reset: 'Limpar todas as inscrições', admin_no_slots: 'Nenhum horário criado.',
+    upcoming: '📅 PRÓXIMOS HORÁRIOS', history: '⏳ HISTÓRICO DE HORÁRIOS',
+    btn_whatsapp: '📋 WhatsApp', btn_edit: 'Editar', btn_remove: 'Remover', btn_remove_x: '✕ Remover',
+    waitlist_badge: 'Espera',
+    err_no_date: 'Escolha a data.', err_no_time: 'Escolha a hora.',
+    remove_slot_title: 'Remover horário',
+    remove_slot_msg: 'Remover este horário? Todos os jogadores inscritos perderão a vaga.',
+    reset_title: 'Limpar todas as inscrições',
+    reset_msg: 'Apagar TODAS as inscrições e lista de espera? Esta ação não pode ser desfeita.',
+    confirm_cancel_title: 'Cancelar agendamento',
+    confirm_back: 'Voltar', confirm_ok_btn: 'Cancelar agendamento',
+    summary_no_regs: '(Nenhum inscrito ainda)\n', summary_footer: 'Boa aula a todos! 🎾🔥',
+    copy_success: '✅ Resumo copiado! Agora é só colar no WhatsApp.',
+    copy_error: 'Erro ao copiar texto. Tente selecionar e copiar manualmente.',
+    lang_btn: '🇺🇸 EN',
+    banner_waitlist: (name) => `⚠️ Tudo lotado, <strong>${name}</strong>. Adicionado à lista de espera!`,
+    banner_confirmed: (name, time, isAlt) => `✓ Confirmado! <strong>${name}</strong> → ${time}${isAlt ? ' (horário alternativo)' : ''}`,
+    slots_count: (n) => `(${n} horários)`,
+    auto_assign_success: (n) => `${n} jogador(es) alocado(s)!`,
+    auto_assign_none: 'Sem vagas para a lista de espera.',
+    confirm_cancel_msg: (name) => `Cancelar a inscrição de "${name}"? Esta ação não pode ser desfeita.`,
+  },
+  en: {
+    page_title: 'Schedule - Beach Tennis',
+    subtitle: 'Coach Yan Abdalla',
+    tab_schedule: 'Schedule', tab_register: 'Sign Up', tab_admin: 'Coach Panel',
+    loading: 'Loading…', first_come: 'First come, first served · 4 spots per session',
+    today: 'Today', tomorrow: 'Tomorrow',
+    no_slots: 'No classes scheduled for this day.',
+    map_link: '📍 View on map', full: 'Full', spot: 'spot', spots: 'spots',
+    auth_title_login: 'Sign in to your account', auth_title_signup: 'Create new account',
+    email_label: 'Email', password_label: 'Password',
+    forgot_password: 'Forgot password?',
+    btn_login: 'Sign In', btn_signup: 'Register',
+    btn_create_account: "Don't have an account? Create one", btn_have_account: 'Already have an account. Sign In',
+    auth_error_fields: 'Valid email and password with 6+ characters are required.',
+    auth_error_prefix: 'Error: ',
+    reset_no_email: "⚠️ Enter your email above and click 'Forgot password?'.",
+    reset_sent: '✓ Recovery link sent! Check your email.',
+    reset_error: 'Error sending email. Please verify the address is correct.',
+    new_booking: 'New Booking', logout: 'Sign Out',
+    name_label: 'Your name',
+    pref_label: 'Preference', pref_pill: '1st choice',
+    alt1_label: 'Alternative 1', alt1_pill: '2nd choice',
+    alt2_label: 'Alternative 2', alt2_pill: '3rd choice',
+    legend_1: '🟢 1st', legend_2: '🟡 2nd', legend_3: '🔵 3rd', legend_full: '🔴 Full',
+    btn_confirm: 'Confirm Booking', btn_processing: 'Processing...',
+    my_bookings: '📋 My Bookings', no_bookings: 'You have no bookings yet.',
+    status_confirmed: '✓ Confirmed', status_waiting: '⏳ Waitlist', btn_cancel_booking: 'Cancel',
+    no_slots_picker: 'No sessions on this day.',
+    must_login: 'You need to be logged in!',
+    err_name: '⚠️ Please enter your name.', err_pref: '⚠️ Please choose a preferred session.',
+    no_permission: 'You do not have permission to cancel this booking.',
+    err_cancel: 'Error canceling booking. Please try again.',
+    err_save: 'Error saving. Please try again.',
+    cal_label: 'Add to your calendar:', cal_google: '📅 Google Calendar', cal_ios: '💾 Apple / Outlook',
+    cal_event_title: 'Beach Tennis Class',
+    admin_form_title_add: 'Add new session', admin_form_title_edit: 'Edit session',
+    date_label: 'Date', time_label: 'Time', period_label: 'Period',
+    period_morning: 'Morning', period_afternoon: 'Afternoon', period_evening: 'Evening',
+    level_label: 'Class Level', level_all: 'All levels',
+    level_beg_int: 'Beginner/Intermediate', level_int_adv: 'Intermediate/Advanced',
+    city_label: 'City', location_label: 'Location',
+    btn_cancel_edit: 'Cancel', btn_save_slot: 'Add Session', btn_save_edit: 'Save Changes',
+    section_all_slots: 'All sessions', section_waitlist: 'Waitlist',
+    no_waitlist: 'Nobody on the waitlist.',
+    btn_auto_assign: '⚡ Assign from waitlist', section_danger: 'Danger Zone',
+    btn_reset: 'Clear all bookings', admin_no_slots: 'No sessions created.',
+    upcoming: '📅 UPCOMING SESSIONS', history: '⏳ SESSION HISTORY',
+    btn_whatsapp: '📋 WhatsApp', btn_edit: 'Edit', btn_remove: 'Remove', btn_remove_x: '✕ Remove',
+    waitlist_badge: 'Waitlist',
+    err_no_date: 'Please choose a date.', err_no_time: 'Please choose a time.',
+    remove_slot_title: 'Remove session',
+    remove_slot_msg: 'Remove this session? All registered players will lose their spot.',
+    reset_title: 'Clear all bookings',
+    reset_msg: 'Delete ALL bookings and waitlist? This action cannot be undone.',
+    confirm_cancel_title: 'Cancel booking',
+    confirm_back: 'Go back', confirm_ok_btn: 'Cancel booking',
+    summary_no_regs: '(No one registered yet)\n', summary_footer: 'Great class everyone! 🎾🔥',
+    copy_success: '✅ Summary copied! Now paste it in WhatsApp.',
+    copy_error: 'Error copying text. Try selecting and copying manually.',
+    lang_btn: '🇧🇷 PT',
+    banner_waitlist: (name) => `⚠️ All full, <strong>${name}</strong>. Added to the waitlist!`,
+    banner_confirmed: (name, time, isAlt) => `✓ Confirmed! <strong>${name}</strong> → ${time}${isAlt ? ' (alternative session)' : ''}`,
+    slots_count: (n) => `(${n} sessions)`,
+    auto_assign_success: (n) => `${n} player(s) assigned!`,
+    auto_assign_none: 'No spots available for the waitlist.',
+    confirm_cancel_msg: (name) => `Cancel the booking for "${name}"? This action cannot be undone.`,
+  }
+};
+
+function t(key) { return LANG[lang][key] ?? LANG.pt[key] ?? key; }
+
+const dataTranslations = {
+  'Manhã': 'Morning', 'Tarde': 'Afternoon', 'Noite': 'Evening',
+  'Todos os níveis': 'All levels',
+  'Iniciante/Intermediário': 'Beginner/Intermediate',
+  'Intermediário/Avançado': 'Intermediate/Advanced',
+};
+function td(value) { return lang === 'en' ? (dataTranslations[value] || value) : value; }
+
+function applyStaticTranslations() {
+  document.documentElement.lang = lang === 'en' ? 'en' : 'pt-BR';
+  document.title = t('page_title');
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  document.getElementById('auth-email').placeholder = lang === 'en' ? 'example@email.com' : 'exemplo@email.com';
+  document.getElementById('auth-pass').placeholder = lang === 'en' ? 'Minimum 6 characters' : 'Mínimo 6 caracteres';
+  document.getElementById('reg-name').placeholder = lang === 'en' ? 'How you want to appear on the list' : 'Como quer ser chamado na lista';
+  const authTitle = document.getElementById('auth-title');
+  if (authTitle) authTitle.textContent = isSignUpMode ? t('auth_title_signup') : t('auth_title_login');
+  const btnLogin = document.getElementById('btn-login');
+  if (btnLogin) btnLogin.textContent = isSignUpMode ? t('btn_signup') : t('btn_login');
+  const btnSwitch = document.getElementById('btn-switch');
+  if (btnSwitch) btnSwitch.textContent = isSignUpMode ? t('btn_have_account') : t('btn_create_account');
+  const adminFormTitle = document.getElementById('admin-form-title');
+  if (adminFormTitle) adminFormTitle.textContent = editingSlotId ? t('admin_form_title_edit') : t('admin_form_title_add');
+  const btnSaveSlot = document.getElementById('btn-save-slot');
+  if (btnSaveSlot) btnSaveSlot.textContent = editingSlotId ? t('btn_save_edit') : t('btn_save_slot');
+  const langBtn = document.getElementById('lang-btn');
+  if (langBtn) langBtn.textContent = t('lang_btn');
+}
+
+window.toggleLang = function() {
+  lang = lang === 'pt' ? 'en' : 'pt';
+  localStorage.setItem('lang', lang);
+  applyStaticTranslations();
+  renderAll();
+};
+
 function toDateKey(d) { return d.toISOString().slice(0, 10); }
-function todayKey() { return toDateKey(new Date()); }
+function todayKey() {
+  return new Date().toLocaleDateString("en-CA", {timeZone: "America/Los_Angeles"});
+}
 function addDays(dateKey, n) {
   const d = new Date(dateKey + 'T12:00:00');
   d.setDate(d.getDate() + n);
@@ -368,13 +569,15 @@ function formatDateLabel(dateKey) {
   const d = new Date(dateKey + 'T12:00:00');
   const today = todayKey();
   const tomorrow = addDays(today, 1);
-  if (dateKey === today) return 'Hoje';
-  if (dateKey === tomorrow) return 'Amanhã';
-  return d.toLocaleDateString('pt-BR', { weekday: 'long' });
+  if (dateKey === today) return t('today');
+  if (dateKey === tomorrow) return t('tomorrow');
+  const locale = lang === 'en' ? 'en-US' : 'pt-BR';
+  return d.toLocaleDateString(locale, { weekday: 'long' });
 }
 function formatDateSub(dateKey) {
   const d = new Date(dateKey + 'T12:00:00');
-  return d.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
+  const locale = lang === 'en' ? 'en-US' : 'pt-BR';
+  return d.toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
 let db, auth, slots = [], registrations = [], waitlist = [];
@@ -492,9 +695,9 @@ if (firebaseOk) startListeners();
 
 window.toggleAuthMode = function() {
   isSignUpMode = !isSignUpMode;
-  document.getElementById('auth-title').textContent = isSignUpMode ? 'Criar nova conta' : 'Acesse sua conta';
-  document.getElementById('btn-login').textContent = isSignUpMode ? 'Cadastrar' : 'Entrar';
-  document.getElementById('btn-switch').textContent = isSignUpMode ? 'Já tenho conta. Entrar' : 'Não tem conta? Criar agora';
+  document.getElementById('auth-title').textContent = isSignUpMode ? t('auth_title_signup') : t('auth_title_login');
+  document.getElementById('btn-login').textContent = isSignUpMode ? t('btn_signup') : t('btn_login');
+  document.getElementById('btn-switch').textContent = isSignUpMode ? t('btn_have_account') : t('btn_create_account');
 };
 
 window.handleAuth = async function() {
@@ -503,7 +706,7 @@ window.handleAuth = async function() {
   const errEl = document.getElementById('auth-error');
 
   if (!email || pass.length < 6) {
-    errEl.textContent = "E-mail válido e senha de 6 dígitos são necessários.";
+    errEl.textContent = t('auth_error_fields');
     return;
   }
 
@@ -515,7 +718,7 @@ window.handleAuth = async function() {
     }
     errEl.textContent = "";
   } catch (e) {
-    errEl.textContent = "Erro: " + e.message;
+    errEl.textContent = t('auth_error_prefix') + e.message;
   }
 };
 
@@ -525,17 +728,17 @@ window.resetPassword = async function() {
 
   if (!email) {
     errEl.style.color = 'var(--amber)';
-    errEl.textContent = "⚠️ Digite seu e-mail no campo acima e clique em 'Esqueceu a senha?'.";
+    errEl.textContent = t('reset_no_email');
     return;
   }
 
   try {
     await sendPasswordResetEmail(auth, email);
     errEl.style.color = 'var(--green)';
-    errEl.textContent = "✓ Link de recuperação enviado! Verifique seu e-mail.";
+    errEl.textContent = t('reset_sent');
   } catch (e) {
     errEl.style.color = 'var(--red)';
-    errEl.textContent = "Erro ao enviar e-mail. Verifique se o endereço está correto.";
+    errEl.textContent = t('reset_error');
   }
 };
 
@@ -563,27 +766,21 @@ window.cancelBooking = async function(regId) {
   // Segurança: verifica permissão no cliente (Firestore rules devem reforçar no servidor)
   if (!currentUser) return;
   const canDelete = isTeacher || reg.uid === currentUser.uid;
-  if (!canDelete) { alert('Sem permissão para cancelar este agendamento.'); return; }
+  if (!canDelete) { alert(t('no_permission')); return; }
 
   const slotId = reg.assigned;
 
   showConfirm(
-    'Cancelar agendamento',
-    `Cancelar a inscrição de "${reg.name}"? Esta ação não pode ser desfeita.`,
+    t('confirm_cancel_title'),
+    LANG[lang].confirm_cancel_msg(reg.name),
     async () => {
       try {
         if (firebaseOk) {
-          await updateDoc(doc(db, 'registrations', regId), { status: "cancelado", canceled_ts: serverTimestamp() 
-
-          });
-
-          // Após excluir, tenta promover alguém da lista de espera para esta vaga
-          if (slotId) {
-            await promoteFromWaitlist(slotId);
-          }
+          await updateDoc(doc(db, 'registrations', regId), { status: "cancelado", canceled_ts: serverTimestamp() });
+          if (slotId) await promoteFromWaitlist(slotId);
         }
       } catch(e) {
-        alert('Erro ao cancelar agendamento. Tente novamente.');
+        alert(t('err_cancel'));
         console.error(e);
       }
     }
@@ -616,7 +813,7 @@ function renderSchedule() {
   const daySlots = slotsForDate(viewDate);
   const grid = document.getElementById('slots-grid');
   if (!daySlots.length) {
-    grid.innerHTML = `<div class="no-slots">Nenhuma aula marcada para este dia.</div>`;
+    grid.innerHTML = `<div class="no-slots">${t('no_slots')}</div>`;
     return;
   }
   grid.innerHTML = daySlots.map(slot => {
@@ -632,11 +829,11 @@ function renderSchedule() {
       const locUrl = `https://maps.google.com/?q=${queryStr}`;
       locHTML = `<div style="font-size: 11px; margin-top: 6px; color: var(--text2);">
         ${slot.location} - ${slot.city || ''}
-        <div style="margin-top:2px;"><a href="${locUrl}" target="_blank" style="color: var(--blue); text-decoration: none;">📍 Ver no mapa</a></div>
+        <div style="margin-top:2px;"><a href="${locUrl}" target="_blank" style="color: var(--blue); text-decoration: none;">${t('map_link')}</a></div>
       </div>`;
     }
 
-    const levelDisplay = slot.level || 'Todos os níveis';
+    const levelDisplay = td(slot.level) || t('level_all');
 
     // Chips com botão de excluir (visível para: professor pode ver todos; usuário vê só os seus)
     const chipsHTML = regs.map(reg => {
@@ -644,7 +841,7 @@ function renderSchedule() {
       const canDelete = currentUser && (isTeacher || isOwn);
       const chipClass = isOwn ? 'chip is-mine' : 'chip';
       const deleteBtn = canDelete
-        ? `<button class="chip-delete" title="Cancelar inscrição" onclick="cancelBooking('${reg.id}')">✕</button>`
+        ? `<button class="chip-delete" title="${t('confirm_cancel_title')}" onclick="cancelBooking('${reg.id}')">✕</button>`
         : '';
       return `<span class="${chipClass}">${reg.name}${deleteBtn}</span>`;
     }).join('');
@@ -653,14 +850,14 @@ function renderSchedule() {
       <div class="slot-time">${slot.time}</div>
       <div class="slot-body">
         <div class="slot-label">
-          <strong>${slot.label}</strong> 
+          <strong>${td(slot.label)}</strong>
           <span style="margin: 0 4px; color: var(--border2);">|</span> 
           <span style="color: var(--blue); font-weight:500;">${levelDisplay}</span>
         </div>
         <div class="bar-bg"><div class="bar-fill ${fillClass}" style="width:${pct}%"></div></div>
         <div class="names-row">
           ${chipsHTML}
-          ${full && !regs.length ? '<span class="full-tag">Lotado</span>' : ''}
+          ${full && !regs.length ? `<span class="full-tag">${t('full')}</span>` : ''}
         </div>
         ${locHTML}
       </div>
@@ -681,7 +878,7 @@ function renderMyBookings() {
   const myRegs = [...registrations, ...waitlist].filter(r => r.uid === currentUser.uid);
 
   if (!myRegs.length) {
-    el.innerHTML = `<div class="no-bookings">Você ainda não tem agendamentos.</div>`;
+    el.innerHTML = `<div class="no-bookings">${t('no_bookings')}</div>`;
     return;
   }
 
@@ -708,8 +905,8 @@ function renderMyBookings() {
         <div class="my-booking-detail">${dateLabel}</div>
         <div class="my-booking-detail">${timeLabel}${locationLabel ? ' · ' + locationLabel : ''}</div>
       </div>
-      <span class="my-booking-status ${isWaiting ? 'waiting' : 'confirmed'}">${isWaiting ? '⏳ Espera' : '✓ Confirmado'}</span>
-      <button class="btn-cancel-booking" onclick="cancelBooking('${reg.id}')">Cancelar</button>
+      <span class="my-booking-status ${isWaiting ? 'waiting' : 'confirmed'}">${isWaiting ? t('status_waiting') : t('status_confirmed')}</span>
+      <button class="btn-cancel-booking" onclick="cancelBooking('${reg.id}')">${t('btn_cancel_booking')}</button>
     </div>`;
   }).join('');
 }
@@ -748,18 +945,19 @@ function renderPickers() {
   ['pref', 'alt1', 'alt2'].forEach(key => {
     const el = document.getElementById(key + '-picker');
     if (!daySlots.length) {
-      el.innerHTML = '<div style="font-size:13px;color:var(--text2)">Sem horários neste dia.</div>';
+      el.innerHTML = `<div style="font-size:13px;color:var(--text2)">${t('no_slots_picker')}</div>`;
       return;
     }
     el.innerHTML = daySlots.map(slot => {
       const full = isFull(slot.id), left = spotsLeft(slot.id);
       const sel = picks[key] === slot.id;
       const cls = sel ? 's-' + key : (full ? 'disabled' : '');
-      const levelDisplay = slot.level || 'Todos os níveis';
+      const levelDisplay = td(slot.level) || t('level_all');
+      const spotsText = full ? t('full') : left + ' ' + (left === 1 ? t('spot') : t('spots'));
       return `<div class="slot-opt ${cls}" onclick="pickSlot('${key}','${slot.id}')">
         <div class="ot">${slot.time}</div>
         <div class="ob" style="margin-bottom:3px; font-weight:500; color:var(--blue);">${levelDisplay}</div>
-        <div class="ob">${full ? 'Lotado' : left + ' vaga' + (left === 1 ? '' : 's')}</div>
+        <div class="ob">${spotsText}</div>
       </div>`;
     }).join('');
   });
@@ -782,34 +980,35 @@ function getCalendarLinks(slot) {
   const endH = String(parseInt(h) + 1).padStart(2, '0'); 
   const end = `${dateStr}T${endH}${m}00`;
   
-  const title = encodeURIComponent("Aula de Beach Tennis");
+  const calTitle = t('cal_event_title');
+  const title = encodeURIComponent(calTitle);
   const loc = encodeURIComponent(`${slot.location}, ${slot.city || ''}`);
-  
+
   const google = `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&location=${loc}`;
-  const icsData = `BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nDTSTART:${start}\nDTEND:${end}\nSUMMARY:Aula de Beach Tennis\nLOCATION:${slot.location}, ${slot.city || ''}\nEND:VEVENT\nEND:VCALENDAR`;
+  const icsData = `BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nDTSTART:${start}\nDTEND:${end}\nSUMMARY:${calTitle}\nLOCATION:${slot.location}, ${slot.city || ''}\nEND:VEVENT\nEND:VCALENDAR`;
   const icsFile = 'data:text/calendar;charset=utf8,' + encodeURIComponent(icsData);
-  
+
   return `<div class="cal-links">
-    <a href="${google}" target="_blank" class="cal-btn cal-google">📅 Google Calendar</a>
-    <a href="${icsFile}" download="aula-beach-tennis.ics" class="cal-btn cal-ics">💾 Apple / Outlook</a>
+    <a href="${google}" target="_blank" class="cal-btn cal-google">${t('cal_google')}</a>
+    <a href="${icsFile}" download="beach-tennis-class.ics" class="cal-btn cal-ics">${t('cal_ios')}</a>
   </div>`;
 }
 
 window.register = async function() {
   if (firebaseOk && !currentUser) {
-    alert("Você precisa estar logado!");
+    alert(t('must_login'));
     return;
   }
 
   const name = document.getElementById('reg-name').value.trim();
   const banner = document.getElementById('reg-banner');
   banner.className = 'banner'; banner.style.display = 'none';
-  if (!name) { showBanner('error', '⚠️ Digite seu nome.'); return; }
-  if (!picks.pref) { showBanner('error', '⚠️ Escolha um horário de preferência.'); return; }
+  if (!name) { showBanner('error', t('err_name')); return; }
+  if (!picks.pref) { showBanner('error', t('err_pref')); return; }
 
   const btn = document.getElementById('reg-btn');
   btn.disabled = true;
-  btn.textContent = "Processando...";
+  btn.textContent = t('btn_processing');
 
   try {
     const order = ['pref', 'alt1', 'alt2'].map(k => picks[k]).filter(Boolean);
@@ -831,13 +1030,12 @@ window.register = async function() {
 
     const slot = slots.find(s => s.id === assigned);
     if (!assigned) {
-      showBanner('warning', `⚠️ Tudo lotado, <strong>${name}</strong>. Adicionado à lista de espera!`);
+      showBanner('warning', LANG[lang].banner_waitlist(name));
     } else {
       const gotPref = assigned === picks.pref;
-      let msgHTML = `✓ Confirmado! <strong>${name}</strong> → ${slot.time}${!gotPref ? ' (horário alternativo)' : ''}`;
-      msgHTML += `<div style="margin-top:12px; font-weight:600; font-size:12px; color:var(--text2);">Adicione à sua agenda:</div>`;
+      let msgHTML = LANG[lang].banner_confirmed(name, slot.time, !gotPref);
+      msgHTML += `<div style="margin-top:12px; font-weight:600; font-size:12px; color:var(--text2);">${t('cal_label')}</div>`;
       msgHTML += getCalendarLinks(slot);
-      
       showBanner('success', msgHTML);
     }
     
@@ -845,10 +1043,10 @@ window.register = async function() {
     document.getElementById('reg-name').value = '';
     renderPickers();
   } catch(e) {
-    showBanner('error', 'Erro ao salvar. Tente novamente.');
+    showBanner('error', t('err_save'));
   } finally {
     btn.disabled = false;
-    btn.textContent = "Confirmar Agendamento";
+    btn.textContent = t('btn_confirm');
   }
 };
 
@@ -863,7 +1061,7 @@ function showBanner(type, html) {
 
 function renderAdminSlots() {
   const el = document.getElementById('admin-slots-list');
-  if (!slots.length) { el.innerHTML = '<div style="font-size:13px;color:var(--text2)">Nenhum horário criado.</div>'; return; }
+  if (!slots.length) { el.innerHTML = `<div style="font-size:13px;color:var(--text2)">${t('admin_no_slots')}</div>`; return; }
 
   const today = todayKey();
   const futureSlots = slots.filter(s => s.date >= today);
@@ -886,20 +1084,20 @@ function renderAdminSlots() {
           <span>${formatDateLabel(date)} — ${formatDateSub(date)}</span>
           ${!isPast ? `
             <div style="display:flex; gap:5px;">
-              <button class="btn-sm" onclick="copyDaySummary('${date}')" title="Copiar resumo para WhatsApp">📋 WhatsApp</button>
+              <button class="btn-sm" onclick="copyDaySummary('${date}')" title="Copiar resumo para WhatsApp">${t('btn_whatsapp')}</button>
             </div>
           ` : ''}
         </div>
         ${daySlots.map(slot => {
           const regs = registrations.filter(r => r.assigned === slot.id);
-          const levelDisplay = slot.level || 'Todos os níveis';
+          const levelDisplay = td(slot.level) || t('level_all');
           const regListHTML = regs.length ? `
             <div class="admin-reg-list">
               ${regs.map(reg => `
                 <div class="admin-reg-item">
                   <span class="reg-name">${reg.name}</span>
                   <span class="reg-email">${reg.email || ''}</span>
-                  <button class="btn-sm danger" title="Remover inscrição" onclick="cancelBooking('${reg.id}')">✕ Remover</button>
+                  <button class="btn-sm danger" onclick="cancelBooking('${reg.id}')">${t('btn_remove_x')}</button>
                 </div>
               `).join('')}
             </div>` : '';
@@ -908,11 +1106,11 @@ function renderAdminSlots() {
             <div style="display:flex; align-items:center; gap:10px;">
               <span class="ar-time">${slot.time}</span>
               <div class="ar-info">
-                <strong>${slot.label}</strong> · ${levelDisplay} · ${regs.length}/${MAX_SPOTS}
+                <strong>${td(slot.label)}</strong> · ${levelDisplay} · ${regs.length}/${MAX_SPOTS}
                 <div style="color:var(--text3); font-size:11px; margin-top:2px;">${slot.city || ''}</div>
               </div>
-              <button class="btn-sm" onclick="editSlot('${slot.id}')">Editar</button>
-              <button class="btn-sm danger" onclick="removeSlot('${slot.id}')">Remover</button>
+              <button class="btn-sm" onclick="editSlot('${slot.id}')">${t('btn_edit')}</button>
+              <button class="btn-sm danger" onclick="removeSlot('${slot.id}')">${t('btn_remove')}</button>
             </div>
             ${regListHTML}
           </div>`;
@@ -925,7 +1123,7 @@ function renderAdminSlots() {
   let html = `
     <div style="margin-top: 15px; margin-bottom: 25px;">
       <div style="font-size: 12px; font-weight: 700; margin-bottom: 12px; color: var(--text2); display: flex; align-items: center; gap: 8px;">
-        📅 PRÓXIMOS HORÁRIOS
+        ${t('upcoming')}
       </div>
       ${renderDayList(futureSlots, false)}
     </div>
@@ -944,21 +1142,22 @@ function renderAdminSlots() {
     html += `
       <div style="margin-top: 25px;">
         <button class="btn-sm" style="width:100%; display:flex; justify-content:space-between; align-items:center; padding: 12px; background: var(--bg2); color: var(--text2); font-weight:700;" onclick="toggleAdminHistory()">
-          <span>⏳ HISTÓRICO DE HORÁRIOS</span>
+          <span>${t('history')}</span>
           <span>${adminHistoryExpanded ? '▲' : '▼'}</span>
         </button>
         <div id="admin-history-content" style="display: ${adminHistoryExpanded ? 'block' : 'none'}; margin-top: 15px;">
           ${sortedMonths.map(monthKey => {
             const monthSlots = historyByMonth[monthKey];
             const isMonthExpanded = expandedMonths[monthKey];
-            const monthLabel = new Date(monthKey + '-01T12:00:00').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+            const locale = lang === 'en' ? 'en-US' : 'pt-BR';
+            const monthLabel = new Date(monthKey + '-01T12:00:00').toLocaleDateString(locale, { month: 'long', year: 'numeric' });
             
             return `
               <div style="margin-bottom: 15px; border-left: 2px solid var(--border); padding-left: 12px;">
                 <div style="cursor:pointer; font-size:14px; font-weight:600; color:var(--text2); margin-bottom:10px; display:flex; align-items:center; gap:8px;" onclick="toggleMonth('${monthKey}')">
                   <span>${isMonthExpanded ? '📂' : '📁'}</span>
                   <span style="text-transform: capitalize;">${monthLabel}</span>
-                  <span style="font-size:11px; font-weight:normal; opacity:0.7;">(${monthSlots.length} horários)</span>
+                  <span style="font-size:11px; font-weight:normal; opacity:0.7;">${LANG[lang].slots_count(monthSlots.length)}</span>
                 </div>
                 ${isMonthExpanded ? renderDayList(monthSlots, true) : ''}
               </div>
@@ -989,47 +1188,48 @@ function generateDaySummaryText(dateKey) {
   const daySlots = slots.filter(s => s.date === dateKey).sort((a,b) => a.order - b.order);
   if (!daySlots.length) return "";
 
-  let text = `🎾 *AGENDA - ${formatDateLabel(dateKey).toUpperCase()} (${formatDateSub(dateKey)})*\n\n`;
+  const header = lang === 'en'
+    ? `🎾 *SCHEDULE - ${formatDateLabel(dateKey).toUpperCase()} (${formatDateSub(dateKey)})*\n\n`
+    : `🎾 *AGENDA - ${formatDateLabel(dateKey).toUpperCase()} (${formatDateSub(dateKey)})*\n\n`;
+  let text = header;
 
   daySlots.forEach(slot => {
     const regs = registrations.filter(r => r.assigned === slot.id);
-    const levelDisplay = slot.level || 'Todos os níveis';
+    const levelDisplay = td(slot.level) || t('level_all');
     text += `⏰ *${slot.time}* - ${levelDisplay}\n`;
     if (slot.location) text += `📍 ${slot.location} - ${slot.city || ''}\n`;
-    
+
     if (regs.length > 0) {
-      regs.forEach((reg, i) => {
-        text += `${i + 1}. ${reg.name}\n`;
-      });
+      regs.forEach((reg, i) => { text += `${i + 1}. ${reg.name}\n`; });
     } else {
-      text += `(Nenhum inscrito ainda)\n`;
+      text += t('summary_no_regs');
     }
     text += `\n`;
   });
 
-  text += `Boa aula a todos! 🎾🔥`;
+  text += t('summary_footer');
   return text;
 }
 
 window.copyDaySummary = function(dateKey) {
   const text = generateDaySummaryText(dateKey);
   navigator.clipboard.writeText(text).then(() => {
-    alert('✅ Resumo copiado! Agora é só colar no WhatsApp.');
+    alert(t('copy_success'));
   }).catch(err => {
-    alert('Erro ao copiar texto. Tente selecionar e copiar manualmente.');
+    alert(t('copy_error'));
   });
 };
 
 function renderWaitlist() {
   const el = document.getElementById('waitlist-panel');
-  if (!waitlist.length) { el.innerHTML = '<div style="font-size:13px;color:var(--text2);">Ninguém na espera.</div>'; return; }
+  if (!waitlist.length) { el.innerHTML = `<div style="font-size:13px;color:var(--text2);">${t('no_waitlist')}</div>`; return; }
   el.innerHTML = waitlist.map(w => {
     const pTime = slots.find(s => s.id === w.pref)?.time || '?';
     const pDate = w.date ? formatDateLabel(w.date) : '';
     return `<div class="wl-item">
       <span class="wl-name">${w.name}</span>
       <span class="wl-info">${pDate} · ${pTime}</span>
-      <span class="wl-badge">Espera</span>
+      <span class="wl-badge">${t('waitlist_badge')}</span>
       <button class="btn-sm danger" onclick="cancelBooking('${w.id}')">✕</button>
     </div>`;
   }).join('');
@@ -1049,8 +1249,8 @@ window.editSlot = function(id) {
   updateLocations(); 
   document.getElementById('new-location').value = slot.location || '';
   
-  document.getElementById('admin-form-title').textContent = 'Editar horário';
-  document.getElementById('btn-save-slot').textContent = 'Salvar Edição';
+  document.getElementById('admin-form-title').textContent = t('admin_form_title_edit');
+  document.getElementById('btn-save-slot').textContent = t('btn_save_edit');
   document.getElementById('btn-cancel-edit').style.display = 'block';
   
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1064,8 +1264,8 @@ window.cancelEdit = function() {
   document.getElementById('new-city').value = 'Fremont';
   updateLocations();
   
-  document.getElementById('admin-form-title').textContent = 'Adicionar novo horário';
-  document.getElementById('btn-save-slot').textContent = 'Adicionar Horário';
+  document.getElementById('admin-form-title').textContent = t('admin_form_title_add');
+  document.getElementById('btn-save-slot').textContent = t('btn_save_slot');
   document.getElementById('btn-cancel-edit').style.display = 'none';
 };
 
@@ -1077,29 +1277,37 @@ window.adminAddSlot = async function() {
   const city = document.getElementById('new-city').value;
   const location = document.getElementById('new-location').value;
   
-  if (!date) { alert('Escolha a data.'); return; }
-  if (!time) { alert('Escolha a hora.'); return; }
+  if (!date) { alert(t('err_no_date')); return; }
+  if (!time) { alert(t('err_no_time')); return; }
   
   const order = parseInt(time.replace(':', ''));
   const slotData = { date, time, label, level, city, location, order };
-  
-  if (editingSlotId) {
-    if (firebaseOk) {
-      await updateDoc(doc(db, 'slots', editingSlotId), slotData);
+  console.log('adminAddSlot chamado. firebaseOk:', firebaseOk, 'editingSlotId:', editingSlotId, 'slotData:', slotData);
+
+  try {
+    if (editingSlotId) {
+      if (firebaseOk) {
+        await updateDoc(doc(db, 'slots', editingSlotId), slotData);
+        console.log('updateDoc concluído');
+      }
+      cancelEdit();
+    } else {
+      if (firebaseOk) {
+        const ref = await addDoc(collection(db, 'slots'), slotData);
+        console.log('addDoc concluído, id:', ref.id);
+      }
+      document.getElementById('new-time').value = '';
     }
-    cancelEdit();
-  } else {
-    if (firebaseOk) {
-      await addDoc(collection(db, 'slots'), slotData);
-    }
-    document.getElementById('new-time').value = '';
+  } catch (err) {
+    console.error('Erro ao salvar horário:', err);
+    alert('Erro ao salvar horário: ' + err.message);
   }
 };
 
 window.removeSlot = async function(id) {
   showConfirm(
-    'Remover horário',
-    'Remover este horário? Todos os jogadores inscritos perderão a vaga.',
+    t('remove_slot_title'),
+    t('remove_slot_msg'),
     async () => {
       if (firebaseOk) {
         const batch = writeBatch(db);
@@ -1124,13 +1332,13 @@ window.autoAssign = async function() {
       }
     }
   }
-  alert(count > 0 ? `${count} jogador(es) alocado(s)!` : 'Sem vagas para a lista de espera.');
+  alert(count > 0 ? LANG[lang].auto_assign_success(count) : t('auto_assign_none'));
 };
 
 window.resetAll = async function() {
   showConfirm(
-    'Limpar todas as inscrições',
-    'Apagar TODAS as inscrições e lista de espera? Esta ação não pode ser desfeita.',
+    t('reset_title'),
+    t('reset_msg'),
     async () => {
       if (firebaseOk) {
         const snap = await getDocs(collection(db, 'registrations'));
@@ -1162,6 +1370,7 @@ function renderAll() {
   renderAdminSlots();
   renderWaitlist();
   renderMyBookings();
+  applyStaticTranslations();
 }
 
 renderAll();
