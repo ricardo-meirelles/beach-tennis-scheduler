@@ -97,15 +97,15 @@
 .pill.blue { background: var(--blue-bg); color: var(--blue-text); }
 input[type=text], input[type=password], input[type=time], input[type=date], select { width: 100%; padding: 10px 13px; font-size: 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--text); outline: none; transition: border .15s; font-family: inherit; }
 input[type=text]:focus, input[type=password]:focus, input[type=time]:focus, input[type=date]:focus, select:focus { border-color: var(--border2); }
-.slot-picker { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 7px; }
-.slot-opt { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 8px 8px; cursor: pointer; text-align: center; user-select: none; transition: all .12s; background: var(--bg); }
+.slot-picker { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 7px; }
+.slot-opt { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 8px 8px; cursor: pointer; text-align: center; user-select: none; transition: all .12s; background: var(--bg); overflow: hidden; }
 .slot-opt:not(.disabled):hover { border-color: var(--border2); background: var(--bg2); }
 .slot-opt.s-pref { border-color: var(--green); background: var(--green-bg); }
 .slot-opt.s-alt1 { border-color: var(--amber); background: var(--amber-bg); }
 .slot-opt.s-alt2 { border-color: var(--blue); background: var(--blue-bg); }
 .slot-opt.disabled { opacity: .45; cursor: not-allowed; }
 .slot-opt .ot { font-size: 15px; font-weight: 600; color: var(--text); }
-.slot-opt .ob { font-size: 11px; color: var(--text2); margin-top: 3px; }
+.slot-opt .ob { font-size: 11px; color: var(--text2); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .s-pref .ob { color: var(--green-text); }
 .s-alt1 .ob { color: var(--amber-text); }
 .s-alt2 .ob { color: var(--blue-text); }
@@ -297,8 +297,11 @@ input[type=text]:focus, input[type=password]:focus, input[type=time]:focus, inpu
         <div class="form-label" data-i18n="level_label">Nível da Turma</div>
         <select id="new-level">
           <option value="Todos os níveis" data-i18n="level_all">Todos os níveis</option>
+          <option value="Iniciante" data-i18n="level_beg">Iniciante</option>
           <option value="Iniciante/Intermediário" data-i18n="level_beg_int">Iniciante/Intermediário</option>
+          <option value="Intermediário" data-i18n="level_int">Intermediário</option>
           <option value="Intermediário/Avançado" data-i18n="level_int_adv">Intermediário/Avançado</option>
+          <option value="Avançado" data-i18n="level_adv">Avançado</option>
         </select>
 
         <div class="form-label" data-i18n="city_label">Cidade</div>
@@ -306,6 +309,8 @@ input[type=text]:focus, input[type=password]:focus, input[type=time]:focus, inpu
           <option value="Fremont">Fremont</option>
           <option value="Walnut Creek">Walnut Creek</option>
           <option value="Larkspur">Larkspur</option>
+          <option value="Redwood">Redwood</option>
+          <option value="Mountain View">Mountain View</option>
         </select>
 
         <div class="form-label" data-i18n="location_label">Local</div>
@@ -317,7 +322,10 @@ input[type=text]:focus, input[type=password]:focus, input[type=time]:focus, inpu
       </div>
     </div>
     <div class="card">
-      <div class="section-title" data-i18n="section_all_slots">Todos os horários</div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <div class="section-title" style="margin-bottom:0;" data-i18n="section_all_slots">Todos os horários</div>
+        <button class="btn-sm" onclick="copyLastWeek()" data-i18n="copy_week_btn">Copiar semana anterior</button>
+      </div>
       <div id="admin-slots-list"></div>
     </div>
     <div class="card">
@@ -421,6 +429,7 @@ const LANG = {
     date_label: 'Data', time_label: 'Hora', period_label: 'Período',
     period_morning: 'Manhã', period_afternoon: 'Tarde', period_evening: 'Noite',
     level_label: 'Nível da Turma', level_all: 'Todos os níveis',
+    level_beg: 'Iniciante', level_int: 'Intermediário', level_adv: 'Avançado',
     level_beg_int: 'Iniciante/Intermediário', level_int_adv: 'Intermediário/Avançado',
     city_label: 'Cidade', location_label: 'Local',
     btn_cancel_edit: 'Cancelar', btn_save_slot: 'Adicionar Horário', btn_save_edit: 'Salvar Edição',
@@ -442,6 +451,11 @@ const LANG = {
     copy_success: '✅ Resumo copiado! Agora é só colar no WhatsApp.',
     copy_error: 'Erro ao copiar texto. Tente selecionar e copiar manualmente.',
     lang_btn: '🇺🇸 EN',
+    copy_week_btn: 'Copiar semana anterior',
+    copy_week_none: 'Nenhuma aula encontrada na semana anterior para copiar.',
+    copy_week_all_exist: 'Todos os horários da semana anterior já existem para esta semana.',
+    copy_week_success: (n) => `✓ ${n} horário(s) criado(s) com sucesso!`,
+    copy_week_confirm: (n, summary) => `Criar ${n} horário(s) na próxima semana?\n\n${summary}`,
     banner_waitlist: (name) => `⚠️ Tudo lotado, <strong>${name}</strong>. Adicionado à lista de espera!`,
     banner_confirmed: (name, time, isAlt) => `✓ Confirmado! <strong>${name}</strong> → ${time}${isAlt ? ' (horário alternativo)' : ''}`,
     slots_count: (n) => `(${n} horários)`,
@@ -488,6 +502,7 @@ const LANG = {
     date_label: 'Date', time_label: 'Time', period_label: 'Period',
     period_morning: 'Morning', period_afternoon: 'Afternoon', period_evening: 'Evening',
     level_label: 'Class Level', level_all: 'All levels',
+    level_beg: 'Beginner', level_int: 'Intermediate', level_adv: 'Advanced',
     level_beg_int: 'Beginner/Intermediate', level_int_adv: 'Intermediate/Advanced',
     city_label: 'City', location_label: 'Location',
     btn_cancel_edit: 'Cancel', btn_save_slot: 'Add Session', btn_save_edit: 'Save Changes',
@@ -509,6 +524,11 @@ const LANG = {
     copy_success: '✅ Summary copied! Now paste it in WhatsApp.',
     copy_error: 'Error copying text. Try selecting and copying manually.',
     lang_btn: '🇧🇷 PT',
+    copy_week_btn: 'Copy last week',
+    copy_week_none: 'No sessions found in the last week to copy.',
+    copy_week_all_exist: "All last week's sessions already exist for the coming week.",
+    copy_week_success: (n) => `✓ ${n} session(s) created successfully!`,
+    copy_week_confirm: (n, summary) => `Create ${n} session(s) for next week?\n\n${summary}`,
     banner_waitlist: (name) => `⚠️ All full, <strong>${name}</strong>. Added to the waitlist!`,
     banner_confirmed: (name, time, isAlt) => `✓ Confirmed! <strong>${name}</strong> → ${time}${isAlt ? ' (alternative session)' : ''}`,
     slots_count: (n) => `(${n} sessions)`,
@@ -523,10 +543,16 @@ function t(key) { return LANG[lang][key] ?? LANG.pt[key] ?? key; }
 const dataTranslations = {
   'Manhã': 'Morning', 'Tarde': 'Afternoon', 'Noite': 'Evening',
   'Todos os níveis': 'All levels',
+  'Iniciante': 'Beginner',
   'Iniciante/Intermediário': 'Beginner/Intermediate',
+  'Intermediário': 'Intermediate',
   'Intermediário/Avançado': 'Intermediate/Advanced',
+  'Avançado': 'Advanced',
 };
 function td(value) { return lang === 'en' ? (dataTranslations[value] || value) : value; }
+function escapeHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
+}
 
 function applyStaticTranslations() {
   document.documentElement.lang = lang === 'en' ? 'en' : 'pt-BR';
@@ -598,7 +624,7 @@ let pendingDeleteCallback = null;
 // ==========================================
 // 🔴 ALTERE PARA O SEU E-MAIL REAL AQUI:
 // ==========================================
-const ADMIN_EMAIL = "yanmeloa1@gmail.com"; 
+const ADMIN_EMAIL = isStaging ? "maaymunhoz@gmail.com" : "yanmeloa1@gmail.com";
 
 try {
   const app = initializeApp(firebaseConfig);
@@ -610,8 +636,10 @@ try {
 // --- Lógica dos Dropdowns de Local ---
 const mapLocations = {
   "Fremont": ["Central Park Beach Volleyball Courts"],
-  "Walnut Creek": ["Heather Farm Park", "Larkey Park Swim Center"],
-  "Larkspur": ["Piper park Sand Volleyball courts"]
+  "Walnut Creek": ["Heather Farm Park", "Larkey Park Swim Center", "Northgate Park", "Rodgers-Smith Park"],
+  "Larkspur": ["Piper park Sand Volleyball courts"],
+  "Redwood": ["Sporthouse"],
+  "Mountain View": ["Sylvan Park"]
 };
 
 window.updateLocations = function() {
@@ -828,7 +856,7 @@ function renderSchedule() {
       const queryStr = encodeURIComponent(`${slot.location}, ${slot.city || ''}`);
       const locUrl = `https://maps.google.com/?q=${queryStr}`;
       locHTML = `<div style="font-size: 11px; margin-top: 6px; color: var(--text2);">
-        ${slot.location} - ${slot.city || ''}
+        ${escapeHtml(slot.location)} - ${escapeHtml(slot.city || '')}
         <div style="margin-top:2px;"><a href="${locUrl}" target="_blank" style="color: var(--blue); text-decoration: none;">${t('map_link')}</a></div>
       </div>`;
     }
@@ -843,7 +871,7 @@ function renderSchedule() {
       const deleteBtn = canDelete
         ? `<button class="chip-delete" title="${t('confirm_cancel_title')}" onclick="cancelBooking('${reg.id}')">✕</button>`
         : '';
-      return `<span class="${chipClass}">${reg.name}${deleteBtn}</span>`;
+      return `<span class="${chipClass}">${escapeHtml(reg.name)}${deleteBtn}</span>`;
     }).join('');
 
     return `<div class="slot-card${full ? ' full' : ''}">
@@ -897,11 +925,11 @@ function renderMyBookings() {
     const slot = slots.find(s => s.id === reg.assigned);
     const dateLabel = reg.date ? `${formatDateLabel(reg.date)} · ${formatDateSub(reg.date)}` : '';
     const timeLabel = slot ? slot.time : '—';
-    const locationLabel = slot ? `${slot.location || ''} · ${slot.city || ''}` : '';
+    const locationLabel = slot ? `${escapeHtml(slot.location || '')} · ${escapeHtml(slot.city || '')}` : '';
 
     return `<div class="my-booking-item">
       <div class="my-booking-info">
-        <div class="my-booking-name">${reg.name}</div>
+        <div class="my-booking-name">${escapeHtml(reg.name)}</div>
         <div class="my-booking-detail">${dateLabel}</div>
         <div class="my-booking-detail">${timeLabel}${locationLabel ? ' · ' + locationLabel : ''}</div>
       </div>
@@ -1015,9 +1043,10 @@ window.register = async function() {
     let assigned = null;
     for (const sid of order) { if (!isFull(sid)) { assigned = sid; break; } }
 
+    if (!currentUser) return;
     const reg = {
-      uid: currentUser ? currentUser.uid : 'demo_uid',
-      email: currentUser ? currentUser.email : 'demo@demo.com',
+      uid: currentUser.uid,
+      email: currentUser.email,
       name, date: viewDate,
       pref: picks.pref, alt1: picks.alt1 || null, alt2: picks.alt2 || null,
       assigned, ts: serverTimestamp(),
@@ -1029,11 +1058,12 @@ window.register = async function() {
     }
 
     const slot = slots.find(s => s.id === assigned);
+    const safeName = escapeHtml(name);
     if (!assigned) {
-      showBanner('warning', LANG[lang].banner_waitlist(name));
+      showBanner('warning', LANG[lang].banner_waitlist(safeName));
     } else {
       const gotPref = assigned === picks.pref;
-      let msgHTML = LANG[lang].banner_confirmed(name, slot.time, !gotPref);
+      let msgHTML = LANG[lang].banner_confirmed(safeName, slot.time, !gotPref);
       msgHTML += `<div style="margin-top:12px; font-weight:600; font-size:12px; color:var(--text2);">${t('cal_label')}</div>`;
       msgHTML += getCalendarLinks(slot);
       showBanner('success', msgHTML);
@@ -1095,8 +1125,8 @@ function renderAdminSlots() {
             <div class="admin-reg-list">
               ${regs.map(reg => `
                 <div class="admin-reg-item">
-                  <span class="reg-name">${reg.name}</span>
-                  <span class="reg-email">${reg.email || ''}</span>
+                  <span class="reg-name">${escapeHtml(reg.name)}</span>
+                  <span class="reg-email">${escapeHtml(reg.email || '')}</span>
                   <button class="btn-sm danger" onclick="cancelBooking('${reg.id}')">${t('btn_remove_x')}</button>
                 </div>
               `).join('')}
@@ -1107,7 +1137,7 @@ function renderAdminSlots() {
               <span class="ar-time">${slot.time}</span>
               <div class="ar-info">
                 <strong>${td(slot.label)}</strong> · ${levelDisplay} · ${regs.length}/${MAX_SPOTS}
-                <div style="color:var(--text3); font-size:11px; margin-top:2px;">${slot.city || ''}</div>
+                <div style="color:var(--text3); font-size:11px; margin-top:2px;">${escapeHtml(slot.city || '')}</div>
               </div>
               <button class="btn-sm" onclick="editSlot('${slot.id}')">${t('btn_edit')}</button>
               <button class="btn-sm danger" onclick="removeSlot('${slot.id}')">${t('btn_remove')}</button>
@@ -1227,7 +1257,7 @@ function renderWaitlist() {
     const pTime = slots.find(s => s.id === w.pref)?.time || '?';
     const pDate = w.date ? formatDateLabel(w.date) : '';
     return `<div class="wl-item">
-      <span class="wl-name">${w.name}</span>
+      <span class="wl-name">${escapeHtml(w.name)}</span>
       <span class="wl-info">${pDate} · ${pTime}</span>
       <span class="wl-badge">${t('waitlist_badge')}</span>
       <button class="btn-sm danger" onclick="cancelBooking('${w.id}')">✕</button>
@@ -1282,19 +1312,16 @@ window.adminAddSlot = async function() {
   
   const order = parseInt(time.replace(':', ''));
   const slotData = { date, time, label, level, city, location, order };
-  console.log('adminAddSlot chamado. firebaseOk:', firebaseOk, 'editingSlotId:', editingSlotId, 'slotData:', slotData);
 
   try {
     if (editingSlotId) {
       if (firebaseOk) {
         await updateDoc(doc(db, 'slots', editingSlotId), slotData);
-        console.log('updateDoc concluído');
       }
       cancelEdit();
     } else {
       if (firebaseOk) {
-        const ref = await addDoc(collection(db, 'slots'), slotData);
-        console.log('addDoc concluído, id:', ref.id);
+        await addDoc(collection(db, 'slots'), slotData);
       }
       document.getElementById('new-time').value = '';
     }
@@ -1348,6 +1375,60 @@ window.resetAll = async function() {
       }
     }
   );
+};
+
+window.copyLastWeek = async function() {
+  if (!firebaseOk) return;
+
+  const today = todayKey();
+  const lastWeekStart = addDays(today, -7);
+  const lastWeekSlots = slots.filter(s => s.date >= lastWeekStart && s.date < today);
+
+  if (!lastWeekSlots.length) {
+    alert(t('copy_week_none'));
+    return;
+  }
+
+  const slotsToCreate = lastWeekSlots.filter(slot => {
+    const newDate = addDays(slot.date, 7);
+    return !slots.some(s => s.date === newDate && s.time === slot.time);
+  });
+
+  if (!slotsToCreate.length) {
+    alert(t('copy_week_all_exist'));
+    return;
+  }
+
+  const dateGroups = {};
+  slotsToCreate.forEach(slot => {
+    const newDate = addDays(slot.date, 7);
+    if (!dateGroups[newDate]) dateGroups[newDate] = [];
+    dateGroups[newDate].push(slot.time);
+  });
+
+  const summaryLines = Object.keys(dateGroups).sort().map(date => {
+    const times = dateGroups[date].sort().join(', ');
+    return `• ${formatDateLabel(date)} (${formatDateSub(date)}): ${times}`;
+  });
+
+  const confirmMsg = LANG[lang].copy_week_confirm(slotsToCreate.length, summaryLines.join('\n'));
+
+  if (!confirm(confirmMsg)) return;
+
+  try {
+    const batch = writeBatch(db);
+    slotsToCreate.forEach(slot => {
+      const { id, ...slotData } = slot;
+      slotData.date = addDays(slot.date, 7);
+      const newRef = doc(collection(db, 'slots'));
+      batch.set(newRef, slotData);
+    });
+    await batch.commit();
+    alert(LANG[lang].copy_week_success(slotsToCreate.length));
+  } catch(e) {
+    console.error(e);
+    alert(t('err_save'));
+  }
 };
 
 window.switchTab = function(tab) {
