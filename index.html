@@ -378,10 +378,12 @@ const firebaseConfig = isStaging ? STAGING_CONFIG : PROD_CONFIG;
 console.log("Ambiente atual:", isStaging ? "🛠️ STAGING" : "🚀 PRODUÇÃO");
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, doc, onSnapshot, addDoc, updateDoc, deleteDoc, getDocs, serverTimestamp, query, orderBy, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, doc, onSnapshot, addDoc, updateDoc, deleteDoc, getDocs, serverTimestamp, query, orderBy, where, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const MAX_SPOTS = 4;
+// Dias para trás escutados em tempo real; o histórico mais antigo é carregado só quando o professor abre o histórico
+const LIVE_WINDOW_DAYS = 60;
 
 // =============================================
 // SISTEMA DE INTERNACIONALIZAÇÃO (i18n)
@@ -419,6 +421,7 @@ const LANG = {
     status_confirmed: '✓ Confirmado', status_waiting: '⏳ Espera', btn_cancel_booking: 'Cancelar',
     no_slots_picker: 'Sem horários neste dia.',
     must_login: 'Você precisa estar logado!',
+    err_load: '⚠️ Erro ao carregar os dados. Tente recarregar a página.',
     err_name: '⚠️ Digite seu nome.', err_pref: '⚠️ Escolha um horário de preferência.',
     no_permission: 'Sem permissão para cancelar este agendamento.',
     err_cancel: 'Erro ao cancelar agendamento. Tente novamente.',
@@ -492,6 +495,7 @@ const LANG = {
     status_confirmed: '✓ Confirmed', status_waiting: '⏳ Waitlist', btn_cancel_booking: 'Cancel',
     no_slots_picker: 'No sessions on this day.',
     must_login: 'You need to be logged in!',
+    err_load: '⚠️ Error loading data. Please reload the page.',
     err_name: '⚠️ Please enter your name.', err_pref: '⚠️ Please choose a preferred session.',
     no_permission: 'You do not have permission to cancel this booking.',
     err_cancel: 'Error canceling booking. Please try again.',
@@ -607,6 +611,7 @@ function formatDateSub(dateKey) {
 }
 
 let db, auth, slots = [], registrations = [], waitlist = [];
+let oldSlots = [], oldRegs = [], historyLoaded = false;
 let picks = { pref: null, alt1: null, alt2: null };
 let isTeacher = false;
 let firebaseOk = false;
@@ -674,21 +679,31 @@ window.confirmCancel = function() {
 };
 
 
+function liveFromKey() { return addDays(todayKey(), -LIVE_WINDOW_DAYS); }
+
+function listenerError(name, err) {
+  console.error(`Erro ao carregar ${name}:`, err);
+  showBanner('error', t('err_load'));
+}
+
 function startListeners() {
-  onSnapshot(query(collection(db,'slots'), orderBy('date'), orderBy('order')), snap => {
+  const liveFrom = liveFromKey();
+  onSnapshot(query(collection(db,'slots'), where('date', '>=', liveFrom), orderBy('date'), orderBy('order')), snap => {
     slots = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderAll();
-  });
-  onSnapshot(query(collection(db,'registrations'), orderBy('ts')), snap => {
-    // FILTRE APENAS OS ATIVOS ANTES DE SEPARAR:
-    const ativos = snap.docs.filter(d => d.data().status !== "cancelado");
-    
-    // USE A VARIÁVEL "ativos" NO LUGAR DE "snap.docs":
-    registrations = ativos.filter(d => d.data().assigned).map(d => ({ id: d.id, ...d.data() }));
-    waitlist = ativos.filter(d => !d.data().assigned).map(d => ({ id: d.id, ...d.data() }));
-    
+  }, err => listenerError('slots', err));
+  // Sem orderBy('ts') na consulta para não exigir índice composto; ordena no navegador
+  onSnapshot(query(collection(db,'registrations'), where('date', '>=', liveFrom)), snap => {
+    const ativos = snap.docs
+      .map(d => ({ id: d.id, ...d.data({ serverTimestamps: 'estimate' }) }))
+      .filter(r => r.status !== "cancelado")
+      .sort((a, b) => (a.ts?.toMillis() ?? 0) - (b.ts?.toMillis() ?? 0));
+
+    registrations = ativos.filter(r => r.assigned);
+    waitlist = ativos.filter(r => !r.assigned);
+
     renderAll();
-  });
+  }, err => listenerError('registrations', err));
   
   onAuthStateChanged(auth, (user) => {
     currentUser = user;
@@ -788,7 +803,7 @@ function assignedRegs(sid) { return registrations.filter(r => r.assigned === sid
  * Após exclusão, tenta promover alguém da lista de espera para o mesmo horário.
  */
 window.cancelBooking = async function(regId) {
-  const reg = [...registrations, ...waitlist].find(r => r.id === regId);
+  const reg = [...registrations, ...waitlist, ...oldRegs].find(r => r.id === regId);
   if (!reg) return;
 
   // Segurança: verifica permissão no cliente (Firestore rules devem reforçar no servidor)
@@ -805,6 +820,11 @@ window.cancelBooking = async function(regId) {
       try {
         if (firebaseOk) {
           await updateDoc(doc(db, 'registrations', regId), { status: "cancelado", canceled_ts: serverTimestamp() });
+          // O histórico antigo não é escutado em tempo real, então atualiza localmente
+          if (oldRegs.some(r => r.id === regId)) {
+            oldRegs = oldRegs.filter(r => r.id !== regId);
+            renderAdminSlots();
+          }
           if (slotId) await promoteFromWaitlist(slotId);
         }
       } catch(e) {
@@ -1095,7 +1115,7 @@ function renderAdminSlots() {
 
   const today = todayKey();
   const futureSlots = slots.filter(s => s.date >= today);
-  const pastSlots = slots.filter(s => s.date < today);
+  const pastSlots = [...slots, ...oldSlots].filter(s => s.date < today);
 
   // Função auxiliar para renderizar a lista de dias (usada para futuro e dentro dos meses do histórico)
   const renderDayList = (slotsToGroup, isPast = false) => {
@@ -1119,7 +1139,7 @@ function renderAdminSlots() {
           ` : ''}
         </div>
         ${daySlots.map(slot => {
-          const regs = registrations.filter(r => r.assigned === slot.id);
+          const regs = [...registrations, ...oldRegs].filter(r => r.assigned === slot.id);
           const levelDisplay = td(slot.level) || t('level_all');
           const regListHTML = regs.length ? `
             <div class="admin-reg-list">
@@ -1160,7 +1180,7 @@ function renderAdminSlots() {
   `;
 
   // Renderiza Histórico com agrupamento por mês e expansão
-  if (pastSlots.length > 0) {
+  if (pastSlots.length > 0 || !historyLoaded) {
     const historyByMonth = {};
     pastSlots.forEach(s => {
       const monthKey = s.date.substring(0, 7); // YYYY-MM
@@ -1204,7 +1224,33 @@ function renderAdminSlots() {
 window.toggleAdminHistory = function() {
   adminHistoryExpanded = !adminHistoryExpanded;
   renderAdminSlots();
+  if (adminHistoryExpanded && !historyLoaded) loadOldHistory();
 };
+
+/**
+ * Carrega uma única vez os horários e inscrições anteriores à janela em tempo real.
+ */
+async function loadOldHistory() {
+  if (!firebaseOk) return;
+  historyLoaded = true;
+  try {
+    const liveFrom = liveFromKey();
+    const [slotSnap, regSnap] = await Promise.all([
+      getDocs(query(collection(db, 'slots'), where('date', '<', liveFrom))),
+      getDocs(query(collection(db, 'registrations'), where('date', '<', liveFrom)))
+    ]);
+    oldSlots = slotSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    oldRegs = regSnap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .filter(r => r.status !== "cancelado" && r.assigned)
+      .sort((a, b) => (a.ts?.toMillis() ?? 0) - (b.ts?.toMillis() ?? 0));
+  } catch (err) {
+    historyLoaded = false;
+    console.error('Erro ao carregar histórico:', err);
+    alert(t('err_load'));
+  }
+  renderAdminSlots();
+}
 
 window.toggleMonth = function(monthKey) {
   expandedMonths[monthKey] = !expandedMonths[monthKey];
@@ -1338,9 +1384,11 @@ window.removeSlot = async function(id) {
     async () => {
       if (firebaseOk) {
         const batch = writeBatch(db);
-        registrations.filter(r => r.assigned === id).forEach(r => batch.delete(doc(db, 'registrations', r.id)));
+        [...registrations, ...oldRegs].filter(r => r.assigned === id).forEach(r => batch.delete(doc(db, 'registrations', r.id)));
         batch.delete(doc(db, 'slots', id));
         await batch.commit();
+        oldSlots = oldSlots.filter(s => s.id !== id);
+        oldRegs = oldRegs.filter(r => r.assigned !== id);
       }
     }
   );
